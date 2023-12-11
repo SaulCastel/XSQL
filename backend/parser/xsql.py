@@ -5,6 +5,10 @@ from . import lexRules
 from .lexRules import tokens
 import re
 
+def getPosition(p, token:int):
+    '''Returns a tuple containing the line and index of a token'''
+    return (p.lineno(token), p.lexpos(token))
+
 lexer = lex(reflags=re.IGNORECASE, module=lexRules)
 
 precedence = (
@@ -40,26 +44,27 @@ def p_expr_binary(p):
             | expr '*' expr
             | expr '/' expr
     '''
-    p[0] = expr.Binary(p[1], p[2], p[3])
+    position = getPosition(p, 2)
+    p[0] = expr.Binary(p[1], p[2], p[3], position)
 
 def p_expr_unary(p):
     '''
     expr    : '-' expr %prec UMINUS
             | '!' expr
     '''
-    p[0] = expr.Unary(p[1], p[2])
+    position = getPosition(p, 1)
+    p[0] = expr.Unary(p[1], p[2], position)
 
-def p_expr_int_literal(p):
+def p_expr_literal(p):
     '''
     expr    : INT_LITERAL
+            | DECIMAL_LITERAL
+            | DATE_LITERAL
+            | DATETIME_LITERAL
+            | STRING_LITERAL
     '''
-    p[0] = expr.Literal(p[1], 'int')
-
-def p_expr_decimal_literal(p):
-    '''
-    expr    : DECIMAL_LITERAL
-    '''
-    p[0] = expr.Literal(p[1], 'decimal')
+    position = getPosition(p, 1)
+    p[0] = expr.Literal(p[1], position)
 
 def p_error(p):
   if not p:
