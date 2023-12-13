@@ -26,6 +26,18 @@ class Binary:
             return operations.mult(left, right, self.position)
         elif self.operator == '/':
             return operations.div(left, right, self.position)
+        elif self.operator == '>':
+            return left > right
+        elif self.operator == '<':
+            return left < right
+        elif self.operator == '>=':
+            return left >= right
+        elif self.operator == '<=':
+            return left <= right
+        elif self.operator == '==':
+            return left == right
+        elif self.operator == '!=':
+            return left != right
 
 class Unary:
     def __init__(self, operator, operand, position):

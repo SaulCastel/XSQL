@@ -130,6 +130,12 @@ def p_expr_unary(p):
     position = getPosition(p, 1)
     p[0] = expr.Unary(p[1], p[2], position)
 
+def p_expr_group(p):
+    '''
+    expr    : '(' expr ')'
+    '''
+    p[0] = p[2]
+
 def p_expr_literal(p):
     '''
     expr    : INT_LITERAL
