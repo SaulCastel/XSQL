@@ -7,6 +7,6 @@ if __name__ == '__main__':
             text = input('entry > ')
             tree = parser.parse(text)
             for stmt in tree:
-                print(stmt.interpret())
+                stmt.interpret()
         except RuntimeError as error:
             print(error)  

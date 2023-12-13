@@ -1,25 +1,36 @@
 from .ply.lex import TOKEN
 from datetime import datetime, date
-from .interpreter import types
 
 reserved = {
-    'null': 'NULL'
+    'null': 'NULL',
+    'as': 'AS',
+    'where': 'WHERE',
+    'select': 'SELECT',
+    'from': 'FROM',
+    'nchar': 'NCHAR',
+    'nvarchar': 'NVARCHAR',
+    'date': 'DATE',
+    'datetime': 'DATETIME',
+    'int': 'INT',
+    'decimal': 'DECIMAL',
+    'declare': 'DECLARE',
 }
 
 tokens = [
     'LESS_EQUALS', 'GREATER_EQUALS', 'EQUALS', 'NOT_EQUALS', 'AND', 'OR',
-    'DECIMAL_LITERAL','INT_LITERAL', 'STRING_LITERAL', 'DATE_LITERAL', 'DATETIME_LITERAL',
-    'UMINUS'
+    'DECIMAL_LITERAL', 'INT_LITERAL', 'STRING_LITERAL', 'DATE_LITERAL',
+    'DATETIME_LITERAL', 'IDENTIFIER',
 ] + list(reserved.values())
 
-literals = ['+','-','/','*','<','>','!', '@']
+literals = ['+', '-', '/', '*', '<', '>', '!', '@', '(', ')', ';', ',']
 
 number = r'([0-9]+)'
 decimal = f'({number}[.]{number})'
 string = r'("[^"]*")'
 dateRegex = r'((0[1-9]|[12][0-9]|[3[01]])-(0[1-9]|1[0-2])-(1[7-9]|[2-9]\d)\d\d)'
 zeroToSixty = r'(0[0-9]|[1-5][0-9])'
-dateTimeRegex = f'({date} ([01][0-9]|2[0-3]):{zeroToSixty}:{zeroToSixty})'
+dateTimeRegex = f'({dateRegex} ([01][0-9]|2[0-3]):{zeroToSixty}:{zeroToSixty})'
+identifier = r'[a-z_][a-z0-9_]*'
 
 t_LESS_EQUALS = r'<='
 t_GREATER_EQUALS = r'>='
@@ -43,17 +54,23 @@ def t_DATE_LITERAL(t):
 
 @TOKEN(decimal)
 def t_DECIMAL_LITERAL(t):
-    t.value = types.DECIMAL(t.value)
+    t.value = float(t.value)
     return t
 
 @TOKEN(number)
 def t_INT_LITERAL(t):
-    t.value = types.INT(t.value)
+    t.value = int(t.value)
     return t
 
 @TOKEN(string)
 def t_STRING_LITERAL(t):
-    t.value = types.NCHAR(t.value.strip('"'), 100)
+    t.value = t.value.strip('"')
+    return t
+
+@TOKEN(identifier)
+def t_IDENTIFIER(t):
+    t.value = t.value.lower()
+    t.type = reserved.get(t.value, 'IDENTIFIER')
     return t
 
 def t_ignore_newline(t):

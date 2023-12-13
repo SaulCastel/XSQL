@@ -1,4 +1,4 @@
-from . import arithmetic
+from . import operations
 
 class Literal:
     def __init__(self, value, position) -> None:
@@ -19,13 +19,13 @@ class Binary:
         left = self.left.interpret()
         right = self.right.interpret()
         if self.operator == '+':
-            return arithmetic.sum(left, right, self.position)
+            return operations.sum(left, right, self.position)
         elif self.operator == '-':
-            return left - right
+            return operations.sub(left, right, self.position)
         elif self.operator == '*':
-            return left * right
+            return operations.mult(left, right, self.position)
         elif self.operator == '/':
-            return left / right
+            return operations.div(left, right, self.position)
 
 class Unary:
     def __init__(self, operator, operand, position):
