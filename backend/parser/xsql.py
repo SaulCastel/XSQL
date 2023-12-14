@@ -12,11 +12,12 @@ def getPosition(p, token:int):
 lexer = lex.lex(reflags=re.IGNORECASE, module=lexRules)
 
 precedence = (
-    ('left', '+', '-'),
-    ('left', '*', '/'),
-    ('left', 'EQUALS', 'NOT_EQUALS', '<', '>', 'LESS_EQUALS', 'GREATER_EQUALS'),
     ('left', 'OR'),
     ('left', 'AND'),
+    ('left', '!'),
+    ('left', 'EQUALS', 'NOT_EQUALS', '<', '>', 'LESS_EQUALS', 'GREATER_EQUALS'),
+    ('left', '+', '-'),
+    ('left', '*', '/'),
     ('right', 'UMINUS'),
 )
 
@@ -118,6 +119,8 @@ def p_expr_binary(p):
             | expr GREATER_EQUALS expr
             | expr EQUALS expr
             | expr NOT_EQUALS expr
+            | expr AND expr
+            | expr OR expr
     '''
     position = getPosition(p, 2)
     p[0] = expr.Binary(p[1], p[2], p[3], position)

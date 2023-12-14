@@ -38,6 +38,10 @@ class Binary:
             return left == right
         elif self.operator == '!=':
             return left != right
+        elif self.operator == '&&':
+            return left and right
+        elif self.operator == '||':
+            return left or right
 
 class Unary:
     def __init__(self, operator, operand, position):
