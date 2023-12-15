@@ -1,3 +1,4 @@
+// BasicExample.js
 import React, { useState } from "react";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
@@ -5,9 +6,10 @@ import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import Tools from "../Tools/Tools";
 
-function BasicExample() {
+function BasicExample({ onNewQuery, onExecuteQuery }) {
     const [showTools, setShowTools] = useState(false);
     const [sqlContent, setSqlContent] = useState('');
+
 
     const handleToolsClick = () => {
         setShowTools(!showTools);
@@ -23,8 +25,9 @@ function BasicExample() {
                 const content = e.target.result;
                 setSqlContent(content);
             };
-
+            
             reader.readAsText(file);
+            console.log(sqlContent)
         }
     };
 
@@ -61,7 +64,7 @@ function BasicExample() {
                     </Navbar.Collapse>
                 </Container>
             </Navbar>
-            {showTools && <Tools sqlContent={sqlContent} />} {/* Pasa el contenido SQL a Tools */}
+            {showTools && <Tools onNewQuery={onNewQuery} onExecuteQuery={onExecuteQuery} />} {/* Pasa la función onNewQuery a Tools */}
         </div>
     );
 }

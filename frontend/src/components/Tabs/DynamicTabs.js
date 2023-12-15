@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+// DynamicTabs.js (Componente DynamicTabs)
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Tab, Tabs, Button } from "react-bootstrap";
 import ConsoleIn from "../Editor/ConsoleIn";
 
-const DynamicTabs = () => {
+const DynamicTabs = forwardRef((props, ref) => {
   const [key, setKey] = useState("query1");
   const [tabs, setTabs] = useState([
     { key: "query1", title: "Query 1", content: "Contenido de la pestaña 1" },
-    { key: "query2", title: "Query 2", content: "Contenido de la pestaña 2" },
   ]);
 
   const addTab = () => {
@@ -22,13 +22,26 @@ const DynamicTabs = () => {
     setKey(updatedTabs.length > 0 ? updatedTabs[0].key : null);
   };
 
+  // Exponer la función addTab mediante useImperativeHandle
+  useImperativeHandle(ref, () => ({
+    addTab: addTab,
+    handleExecuteQuery2: handleExecuteQuery2,
+  }));
+
+  const handleExecuteQuery2 = () => {
+    // Puedes realizar alguna lógica específica aquí, si es necesario
+    console.log(`Ejecutando consulta para la pestaña `);
+  };
+
+  const handleExecuteQuery = () => {
+        
+  }
+
+
   return (
     <div className='col-10'>
       <div className='row'>
         <div className='py-4'>
-          {/* <Button variant="primary" className="mb-3" onClick={addTab}>
-            + [tempoal]
-          </Button> */}
           <Tabs activeKey={key} onSelect={(k) => setKey(k)}>
             {tabs.map((tab) => (
               <Tab key={tab.key} eventKey={tab.key} title={(
@@ -39,7 +52,7 @@ const DynamicTabs = () => {
                   </Button>
                 </span>
               )}>
-                <ConsoleIn />
+                <ConsoleIn onExecuteQuery={ () => handleExecuteQuery2(tab.key)}/>
               </Tab>
             ))}
           </Tabs>
@@ -47,6 +60,6 @@ const DynamicTabs = () => {
       </div>
     </div>
   );
-};
+});
 
 export default DynamicTabs;

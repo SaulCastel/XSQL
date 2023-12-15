@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
 
-function ConsoleIn() {
+function ConsoleIn({ onExecuteQuery }) {
   const [sqlQuery, setSqlQuery] = useState('');
   const [queryResult, setQueryResult] = useState('');
 
@@ -78,7 +78,6 @@ ${generateTableLine(columnSizes, 'bottom')}`;
             theme='vs-dark'
             onChange={(value) => setSqlQuery(value)}
           />
-          <button onClick={handleExecuteQuery}>Ejecutar Consulta</button>
         </div>
         <div className='col-6 py-1'>
           <h5>Salida</h5>
