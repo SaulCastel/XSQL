@@ -2,22 +2,10 @@ from .ply.lex import TOKEN
 from datetime import datetime, date
 
 reserved = {
-    #'null': 'NULL',
-    #'as': 'AS',
     'where': 'WHERE',
     'select': 'SELECT',
     'from': 'FROM',
-    #'nchar': 'NCHAR',
-    #'nvarchar': 'NVARCHAR',
-    #'date': 'DATE',
-    #'datetime': 'DATETIME',
-    #'int': 'INT',
-    #'decimal': 'DECIMAL',
     'declare': 'DECLARE',
-    
-
-
-
     'create': 'CREATE',
     'data':'DATA',
     'base':'BASE',

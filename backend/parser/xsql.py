@@ -5,6 +5,8 @@ from . import lexRules
 from .lexRules import tokens
 import re
 
+BaseEnUso = '  '
+
 def getPosition(p, token:int):
     '''Returns a tuple containing the line and index of a token'''
     return (p.lineno(token), p.lexpos(token))
@@ -38,6 +40,140 @@ def p_stmts(p):
     else:
         p[0] = []
         p[0].append(p[1])
+
+def p_usar_F(p):
+   '''
+   stmt    : USAR IDENTIFIER
+   '''
+   p[0] = stmt.usar(p[2])
+   global BaseEnUso
+   BaseEnUso = p[2]
+
+def p_create_base(p):
+    '''
+    stmt    : CREATE DATA BASE IDENTIFIER
+    '''
+    global BaseEnUso
+    BaseEnUso = p[4]
+
+    p[0] = stmt.createBase(p[4])
+
+
+def p_create_table(p):
+    '''
+    stmt     : CREATE TABLE IDENTIFIER '(' List_Table ')'
+
+    '''
+    p[0]= stmt.createTable(p[3],p[5],BaseEnUso)
+
+
+def p_list_table1(p):
+   '''
+   List_Table       : List_Table IDENTIFIER type ','
+                    | List_Table IDENTIFIER type
+   '''
+   p[0] = p[1]
+   p[0].append([p[2],p[3],False,False])
+
+
+def p_list_table2(p):
+   '''
+   List_Table        : IDENTIFIER type ','
+                     | IDENTIFIER type 
+   '''
+   p[0] = []
+   p[0].append([p[1],p[2],False,False]) 
+
+
+def p_list_table3(p):
+   '''
+   List_Table       : List_Table IDENTIFIER type NOT NULL ','
+                    | List_Table IDENTIFIER type NOT NULL
+                    | List_Table IDENTIFIER type NULL ','
+                    | List_Table IDENTIFIER type NULL
+   '''
+   p[0] = p[1]
+   p[0].append([p[2],p[3],True,False])
+
+def p_list_table4(p):
+   '''
+   List_Table        : IDENTIFIER type NOT NULL ','
+                     | IDENTIFIER type NOT NULL
+                     | IDENTIFIER type NULL ','
+                     | IDENTIFIER type NULL
+   '''
+   p[0] = []
+   p[0].append([p[1],p[2],True,False]) 
+
+def p_list_table_primaria1(p):
+   '''
+   List_Table        : List_Table IDENTIFIER type NOT NULL PRIMARY KEY ','
+                     | List_Table IDENTIFIER type NOT NULL PRIMARY KEY
+                     | List_Table IDENTIFIER type NULL PRIMARY KEY ','
+                     | List_Table IDENTIFIER type NULL PRIMARY KEY
+                     | List_Table IDENTIFIER type PRIMARY KEY ','
+                     | List_Table IDENTIFIER type PRIMARY KEY
+   '''
+   p[0] = p[1]
+   p[0].append([p[2],p[3],True,True]) 
+
+
+def p_list_table_primaria2(p):
+   '''
+   List_Table        : IDENTIFIER type NOT NULL PRIMARY KEY ','
+                     | IDENTIFIER type NOT NULL PRIMARY KEY
+                     | IDENTIFIER type NULL PRIMARY KEY ','
+                     | IDENTIFIER type NULL PRIMARY KEY
+                     | IDENTIFIER type PRIMARY KEY ','
+                     | IDENTIFIER type PRIMARY KEY
+   '''
+   p[0] = []
+   p[0].append([p[1],p[2],True,True]) 
+
+
+def p_inst_Altert(p):
+   '''
+   stmt : Altert_Table_ADD
+                | Altert_Table_DROP
+   '''
+   p[0] = p[1]
+   
+
+def p_alter_add(p):
+   '''
+   Altert_Table_ADD  : ALTER TABLE IDENTIFIER ADD IDENTIFIER type
+   '''
+   p[0] = stmt.AltertADD(p[3],p[5],BaseEnUso,p[6])
+
+def p_alter_drop(p):
+   '''
+   Altert_Table_DROP  : ALTER TABLE IDENTIFIER DROP IDENTIFIER 
+   '''
+   p[0] = stmt.AltertDROP(p[3],p[5],BaseEnUso)
+
+def p_insert_fila(p):
+   '''
+   stmt : INSERT INTO IDENTIFIER '(' List_identificadores ')' VALUES '(' List_identificadores ')'   
+   '''
+   p[0] = stmt.insertINTO(p[3],p[5],p[9],BaseEnUso)
+
+
+def p_lista_identificadores1(p):
+   '''
+   List_identificadores       : List_identificadores IDENTIFIER 
+                              | List_identificadores IDENTIFIER ',' 
+   '''
+   p[0] = p[1]
+   p[0].append(p[2])
+    
+
+def p_lista_identificadores2(p):
+   '''
+   List_identificadores       : IDENTIFIER ','
+                              | IDENTIFIER
+   '''
+   p[0] = []
+   p[0].append(p[1]) 
 
 def p_stmt_variable(p):
     '''
