@@ -2,18 +2,49 @@ from .ply.lex import TOKEN
 from datetime import datetime, date
 
 reserved = {
-    'null': 'NULL',
-    'as': 'AS',
+    #'null': 'NULL',
+    #'as': 'AS',
     'where': 'WHERE',
     'select': 'SELECT',
     'from': 'FROM',
-    'nchar': 'NCHAR',
-    'nvarchar': 'NVARCHAR',
-    'date': 'DATE',
-    'datetime': 'DATETIME',
-    'int': 'INT',
-    'decimal': 'DECIMAL',
+    #'nchar': 'NCHAR',
+    #'nvarchar': 'NVARCHAR',
+    #'date': 'DATE',
+    #'datetime': 'DATETIME',
+    #'int': 'INT',
+    #'decimal': 'DECIMAL',
     'declare': 'DECLARE',
+    
+
+
+
+    'create': 'CREATE',
+    'data':'DATA',
+    'base':'BASE',
+    'table':'TABLE',
+    'procedure':'PROCEDURE',
+    'function':'FUNCTION',
+    'return': 'RETURN',
+    'as':'AS',
+    'begin':'BEGIN',
+    'end':'END',
+    'alter':'ALTER',
+    'add':'ADD',
+    'drop':'DROP',
+    'int':'INT',
+    'decimal':'DECIMAL',
+    'date':'DATE',
+    'datetime':'DATETIME',
+    'nchar':'NCHAR',
+    'nvarchar':'NVARCHAR',
+    'usar' : 'USAR',
+    'insert': 'INSERT',
+    'into': 'INTO',
+    'values':'VALUES',
+    'primary':'PRIMARY',
+    'key':'KEY',
+    'not':'NOT',
+    'null':'NULL'
 }
 
 tokens = [
