@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import Navbar from './components/Navbar/Navbar';
 import DynamicTabs from './components/Tabs/DynamicTabs';
 import DatabaseTree from './components/DatabaseTree/DatabaseTree';
@@ -6,27 +6,35 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 
 function App() {
   const dynamicTabsRef = useRef(); // Crear una referencia para DynamicTabs
+  const [sqlContent, setSqlContent] = useState({});
 
+  // Acceder a la función addTab a través de la referencia
   const handleNewQuery = () => {
-    // Acceder a la función addTab a través de la referencia
     dynamicTabsRef.current.addTab();
   };
-  
+
+  // Acceder a la función handleExecuteQuery2 a través de la referencia
   const handleExecuteQuery = () => {
-    // Acceder a la función handleExecuteQuery2 a través de la referencia
     dynamicTabsRef.current.handleExecuteQuery2();
+  };
+
+  const dataQuery = (data) => {
+    setSqlContent((prevContent) => {
+      const key = `query${Object.keys(prevContent).length + 1}`;
+      return { ...prevContent, [key]: data };
+    });
   };
 
   return (
     <div className="-" >
       <header className="App-header">
-        <Navbar onNewQuery={handleNewQuery}/>
+        <Navbar onNewQuery={handleNewQuery} onDataQuery={dataQuery}/>
       </header>
       <body >
         <div className='container-fluid'>
           <div className='row'>
             <DatabaseTree />
-            <DynamicTabs ref={dynamicTabsRef} onExecuteQuery={handleExecuteQuery}/>
+            <DynamicTabs ref={dynamicTabsRef} onExecuteQuery={handleExecuteQuery} sqlContent={sqlContent} />
           </div>
         </div>
       </body>

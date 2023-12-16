@@ -1,7 +1,6 @@
-// DynamicTabs.js (Componente DynamicTabs)
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Tab, Tabs, Button } from "react-bootstrap";
-import ConsoleIn from "../Editor/ConsoleIn";
+import { Editor } from "@monaco-editor/react";
 
 const DynamicTabs = forwardRef((props, ref) => {
   const [key, setKey] = useState("query1");
@@ -11,10 +10,10 @@ const DynamicTabs = forwardRef((props, ref) => {
 
   const addTab = () => {
     const newKey = `query${tabs.length + 1}`;
-    const newTab = { key: newKey, title: `Query ${tabs.length + 1}`, content: `Contenido de la pestaña ${tabs.length + 1}` };
+    const newTab = { key: newKey, title: `Query ${tabs.length + 1}`, content: '' }; // Inicializamos con cadena vacía
     setTabs([...tabs, newTab]);
     setKey(newKey);
-  };
+};
 
   const removeTab = (tabKey) => {
     const updatedTabs = tabs.filter((tab) => tab.key !== tabKey);
@@ -33,11 +32,6 @@ const DynamicTabs = forwardRef((props, ref) => {
     console.log(`Ejecutando consulta para la pestaña `);
   };
 
-  const handleExecuteQuery = () => {
-        
-  }
-
-
   return (
     <div className='col-10'>
       <div className='row'>
@@ -52,7 +46,48 @@ const DynamicTabs = forwardRef((props, ref) => {
                   </Button>
                 </span>
               )}>
-                <ConsoleIn onExecuteQuery={ () => handleExecuteQuery2(tab.key)}/>
+                {/* Editor de texto, salida y consola */}
+                <div className='container-fluid'>
+                  <div className='row '>
+                    <div className='col-6 py-1'>
+                      <h5>Editor</h5>
+                      <Editor
+                        width='100%'
+                        height='500px'
+                        language='sql'
+                        theme='vs-dark'
+                        value={props.sqlContent[tab.key] || ''} // Asociamos el contenido de la pestaña
+                      />
+                    </div>
+                    <div className='col-6 py-1'>
+                      <h5>Salida</h5>
+                      <Editor
+                        width='100%'
+                        height='500px'
+                        language='plaintext'
+                        theme='vs-dark'
+                        options={{
+                          readOnly: true,
+                          wordWrap: 'on',
+                        }}
+                        // value={queryResult}
+                      />
+                    </div>
+                    <div className='col-12 '>
+                      <h5>Consola</h5>
+                      <Editor
+                        width='100%'
+                        height='200px'
+                        language='plaintext'
+                        theme='vs-dark'
+                        options={{
+                          readOnly: true,
+                          wordWrap: 'on',
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
               </Tab>
             ))}
           </Tabs>

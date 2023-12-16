@@ -6,10 +6,8 @@ import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import Tools from "../Tools/Tools";
 
-function BasicExample({ onNewQuery, onExecuteQuery }) {
+const NavBarSql = ({ onNewQuery, onDataQuery }) => {
     const [showTools, setShowTools] = useState(false);
-    const [sqlContent, setSqlContent] = useState('');
-
 
     const handleToolsClick = () => {
         setShowTools(!showTools);
@@ -23,11 +21,10 @@ function BasicExample({ onNewQuery, onExecuteQuery }) {
 
             reader.onload = (e) => {
                 const content = e.target.result;
-                setSqlContent(content);
+                onDataQuery(content); // Asegúrate de que onDataQuery se esté llamando correctamente
             };
-            
+
             reader.readAsText(file);
-            console.log(sqlContent)
         }
     };
 
@@ -41,7 +38,7 @@ function BasicExample({ onNewQuery, onExecuteQuery }) {
                         <Nav className="me-auto">
                             <NavDropdown title="Archivo" id="basic-nav-dropdown">
                                 <NavDropdown.Item href="#action/3.1">Nuevo</NavDropdown.Item>
-                                <label htmlFor="fileInput" className="nav-dropdown-item">
+                                <label htmlFor="fileInput" className="nav-dropdown-item px-3">
                                     Abrir
                                     <input
                                         type="file"
@@ -64,9 +61,11 @@ function BasicExample({ onNewQuery, onExecuteQuery }) {
                     </Navbar.Collapse>
                 </Container>
             </Navbar>
-            {showTools && <Tools onNewQuery={onNewQuery} onExecuteQuery={onExecuteQuery} />} {/* Pasa la función onNewQuery a Tools */}
+            {showTools && (
+                <Tools onNewQuery={onNewQuery} />
+            )}
         </div>
     );
 }
 
-export default BasicExample;
+export default NavBarSql;
