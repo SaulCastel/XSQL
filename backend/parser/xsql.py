@@ -77,35 +77,53 @@ def p_table_structure(p):
         p[0] = p[1]
         p[0].append(p[3])
 
+def p_column_foreign(p):
+    '''
+    column_declaration  : IDENTIFIER type REFERENCE IDENTIFIER '(' IDENTIFIER ')'
+    '''
+    p[0] = {
+        'name': p[1],
+        'attrib': {
+            'type': p[2],
+            'null': 'no',
+            'key': 'foreign',
+            'reference': f'{p[4]}.{p[6]}'
+        }
+    }
+
 def p_column_declaration(p):
     '''
     column_declaration   : IDENTIFIER type nullity key_type
     '''
     p[0] = {
-        'id': p[1],
-        'type': p[2],
-        'null': p[3],
-        'key': p[4]
+        'name': p[1],
+        'attrib': {
+            'type': p[2],
+            'null': 'no' if p[4] == 'primary' else p[3],
+            'key': p[4]
+        }
     }
 
 def p_column_nullity(p):
     '''
     nullity             : NOT NULL
                         | NULL
+                        | empty
     '''
     if len(p) == 2:
-        p[0] = True
+        p[0] = 'yes'
     else:
-        p[0] = False
+        p[0] = 'no'
 
 def p_column_key_type(p):
     '''
     key_type            : PRIMARY KEY
-                        | FOREIGN KEY
                         | empty
     '''
     if len(p) == 3:
         p[0] = p[1]
+    else:
+        p[0] = ''
 
 def p_alter_add(p):
    '''

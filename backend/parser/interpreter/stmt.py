@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+path = 'databases/'
 
 class Select:
     def __init__(self, exprs:list) -> None:
@@ -14,20 +15,20 @@ class SelectFrom:
         self.table = table
         self.condition = condition
 
+def writeTreeToFile(tree, file):
+    ET.indent(tree)
+    tree.write(file, encoding='utf-8', xml_declaration=True)
+
 class createBase:
     def __init__(self, identificator) -> None:
         self.identificator = identificator
 
     def interpret(self):
-        nombre = self.identificator +'.xml'
-        root = ET.Element(self.identificator)
-  
-        child1 = ET.SubElement(root, 'child1', )
-
+        root = ET.Element('database')
         tree = ET.ElementTree(root)
-
-        with open(nombre, 'wb') as file:
-            tree.write(file, encoding='utf-8', xml_declaration=True)
+        path = globals()['path'] + self.identificator + '.xml'
+        with open(path, 'wb') as file:
+            writeTreeToFile(tree, file)
 
         return ("Base Creada")
 
@@ -39,29 +40,20 @@ class createTable:
        self.NameTable =NameTable
        
     def interpret(self):
-        nombreArchivo=self.base +'.xml'
-        doc = ET.parse(nombreArchivo)
-        raiz =doc.getroot()
- 
-        if raiz.find('child1') != None:
-            raiz.remove(raiz.find('child1'))
+        try:
+            nombreArchivo = globals()['path'] + self.base +'.xml'
+            doc = ET.parse(nombreArchivo)
+            raiz = doc.getroot()
 
-
-
-        Tabla = ET.SubElement(raiz,"Tabla",identificator = self.NameTable)
-        ValorLlavePrimaria = None
-        Columnas =ET.SubElement(Tabla,"COLUMNAS",)
-        for Element in self.column:
-            if Element[3] == True and ValorLlavePrimaria == None :
-                ET.SubElement(Tabla,'PK').text=str(Element[0])
-            elif Element[3] == True and ValorLlavePrimaria != None :
-                print('ya esxiste una llave primaria')
-            else:
-                ET.SubElement(Columnas,"COLUMNA",tipo=(Element[1])).text=str(Element[0])
-        doc.write(nombreArchivo,xml_declaration=True)
-
+            Tabla = ET.SubElement(raiz, self.NameTable)
+            Columnas =ET.SubElement(Tabla, "columns")
+            for column in self.column:
+                Columnas.append(ET.Element(column['name'], attrib=column['attrib']))
+            Tabla.append(ET.Element('records'))
+            writeTreeToFile(doc, nombreArchivo)
+        except Exception as error:
+            print(error)
         return("Tabla Creda")
-    
 
 class AltertADD:
     def __init__(self,NameTable,column,base, type) -> None:

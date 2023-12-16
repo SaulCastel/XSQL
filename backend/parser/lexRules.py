@@ -30,7 +30,7 @@ reserved = {
     'into': 'INTO',
     'values':'VALUES',
     'primary':'PRIMARY',
-    'foreign':'FOREIGN',
+    'reference':'REFERENCE',
     'key':'KEY',
     'not':'NOT',
     'null':'NULL'
