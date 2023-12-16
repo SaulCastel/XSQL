@@ -1,3 +1,5 @@
+import xml.etree.ElementTree as ET
+
 class Select:
     def __init__(self, exprs:list) -> None:
         self.exprs = exprs
@@ -11,11 +13,6 @@ class SelectFrom:
         self.selection = selection
         self.table = table
         self.condition = condition
-
-
-
-import xml.etree.ElementTree as ET
-
 
 class createBase:
     def __init__(self, identificator) -> None:

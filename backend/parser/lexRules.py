@@ -30,6 +30,7 @@ reserved = {
     'into': 'INTO',
     'values':'VALUES',
     'primary':'PRIMARY',
+    'foreign':'FOREIGN',
     'key':'KEY',
     'not':'NOT',
     'null':'NULL'
@@ -41,7 +42,7 @@ tokens = [
     'DATETIME_LITERAL', 'IDENTIFIER',
 ] + list(reserved.values())
 
-literals = ['+', '-', '/', '*', '<', '>', '!', '@', '(', ')', ';', ',']
+literals = ['+', '-', '/', '*', '<', '>', '!', '@', '(', ')', ';', ',', '=', '.']
 
 number = r'([0-9]+)'
 decimal = f'({number}[.]{number})'

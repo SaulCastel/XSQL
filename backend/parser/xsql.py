@@ -61,93 +61,61 @@ def p_create_base(p):
 
 def p_create_table(p):
     '''
-    stmt     : CREATE TABLE IDENTIFIER '(' List_Table ')'
+    stmt     : CREATE TABLE IDENTIFIER '(' table_structure ')'
 
     '''
     p[0]= stmt.createTable(p[3],p[5],BaseEnUso)
 
+def p_table_structure(p):
+    '''
+    table_structure : table_structure ',' column_declaration
+                    | column_declaration
+    '''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = p[1]
+        p[0].append(p[3])
 
-def p_list_table1(p):
-   '''
-   List_Table       : List_Table IDENTIFIER type ','
-                    | List_Table IDENTIFIER type
-   '''
-   p[0] = p[1]
-   p[0].append([p[2],p[3],False,False])
+def p_column_declaration(p):
+    '''
+    column_declaration   : IDENTIFIER type nullity key_type
+    '''
+    p[0] = {
+        'id': p[1],
+        'type': p[2],
+        'null': p[3],
+        'key': p[4]
+    }
 
+def p_column_nullity(p):
+    '''
+    nullity             : NOT NULL
+                        | NULL
+    '''
+    if len(p) == 2:
+        p[0] = True
+    else:
+        p[0] = False
 
-def p_list_table2(p):
-   '''
-   List_Table        : IDENTIFIER type ','
-                     | IDENTIFIER type 
-   '''
-   p[0] = []
-   p[0].append([p[1],p[2],False,False]) 
-
-
-def p_list_table3(p):
-   '''
-   List_Table       : List_Table IDENTIFIER type NOT NULL ','
-                    | List_Table IDENTIFIER type NOT NULL
-                    | List_Table IDENTIFIER type NULL ','
-                    | List_Table IDENTIFIER type NULL
-   '''
-   p[0] = p[1]
-   p[0].append([p[2],p[3],True,False])
-
-def p_list_table4(p):
-   '''
-   List_Table        : IDENTIFIER type NOT NULL ','
-                     | IDENTIFIER type NOT NULL
-                     | IDENTIFIER type NULL ','
-                     | IDENTIFIER type NULL
-   '''
-   p[0] = []
-   p[0].append([p[1],p[2],True,False]) 
-
-def p_list_table_primaria1(p):
-   '''
-   List_Table        : List_Table IDENTIFIER type NOT NULL PRIMARY KEY ','
-                     | List_Table IDENTIFIER type NOT NULL PRIMARY KEY
-                     | List_Table IDENTIFIER type NULL PRIMARY KEY ','
-                     | List_Table IDENTIFIER type NULL PRIMARY KEY
-                     | List_Table IDENTIFIER type PRIMARY KEY ','
-                     | List_Table IDENTIFIER type PRIMARY KEY
-   '''
-   p[0] = p[1]
-   p[0].append([p[2],p[3],True,True]) 
-
-
-def p_list_table_primaria2(p):
-   '''
-   List_Table        : IDENTIFIER type NOT NULL PRIMARY KEY ','
-                     | IDENTIFIER type NOT NULL PRIMARY KEY
-                     | IDENTIFIER type NULL PRIMARY KEY ','
-                     | IDENTIFIER type NULL PRIMARY KEY
-                     | IDENTIFIER type PRIMARY KEY ','
-                     | IDENTIFIER type PRIMARY KEY
-   '''
-   p[0] = []
-   p[0].append([p[1],p[2],True,True]) 
-
-
-def p_inst_Altert(p):
-   '''
-   stmt : Altert_Table_ADD
-                | Altert_Table_DROP
-   '''
-   p[0] = p[1]
-   
+def p_column_key_type(p):
+    '''
+    key_type            : PRIMARY KEY
+                        | FOREIGN KEY
+                        | empty
+    '''
+    if len(p) == 3:
+        p[0] = p[1]
 
 def p_alter_add(p):
    '''
-   Altert_Table_ADD  : ALTER TABLE IDENTIFIER ADD IDENTIFIER type
+   stmt : ALTER TABLE IDENTIFIER ADD IDENTIFIER type
    '''
    p[0] = stmt.AltertADD(p[3],p[5],BaseEnUso,p[6])
 
 def p_alter_drop(p):
    '''
-   Altert_Table_DROP  : ALTER TABLE IDENTIFIER DROP IDENTIFIER 
+   stmt : ALTER TABLE IDENTIFIER DROP IDENTIFIER 
    '''
    p[0] = stmt.AltertDROP(p[3],p[5],BaseEnUso)
 
@@ -158,29 +126,27 @@ def p_insert_fila(p):
    p[0] = stmt.insertINTO(p[3],p[5],p[9],BaseEnUso)
 
 
-def p_lista_identificadores1(p):
-   '''
-   List_identificadores       : List_identificadores IDENTIFIER 
-                              | List_identificadores IDENTIFIER ',' 
-   '''
-   p[0] = p[1]
-   p[0].append(p[2])
+def p_lista_identificadores(p):
+    '''
+    List_identificadores    : List_identificadores ',' IDENTIFIER
+                            | IDENTIFIER
+    '''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = p[1]
+        p[0].append(p[3])
     
-
-def p_lista_identificadores2(p):
-   '''
-   List_identificadores       : IDENTIFIER ','
-                              | IDENTIFIER
-   '''
-   p[0] = []
-   p[0].append(p[1]) 
-
 def p_stmt_variable(p):
     '''
     stmt    : DECLARE '@' IDENTIFIER AS type
+            | DECLARE '@' IDENTIFIER type
     '''
     position = getPosition(p, 2)
-    p[0] = stmt.Declare(p[3], p[5], position)
+    if len(p) == 6:
+        p[0] = stmt.Declare(p[3], p[5], position)
+    else:
+        p[0] = stmt.Declare(p[3], p[4], position)
 
 def p_stmt_select_from(p):
     '''
@@ -234,14 +200,25 @@ def p_condition_chain(p):
 
 def p_condition_base(p):
     '''
-    condition   : IDENTIFIER '<' expr
-                | IDENTIFIER '>' expr
-                | IDENTIFIER LESS_EQUALS expr
-                | IDENTIFIER GREATER_EQUALS expr
-                | IDENTIFIER EQUALS expr
-                | IDENTIFIER NOT_EQUALS expr
+    condition   : symbol '<' expr
+                | symbol '>' expr
+                | symbol LESS_EQUALS expr
+                | symbol GREATER_EQUALS expr
+                | symbol '=' expr
+                | symbol NOT_EQUALS expr
     '''
     pass
+
+def p_symbol(p):
+    '''
+    symbol  : symbol '.' IDENTIFIER
+            | IDENTIFIER
+    '''
+    if len(p) == 2:
+        p[0] = ([p[1]], getPosition(p, 1))
+    else:
+        position = p[1][1]
+        p[0] = (p[1].append(p[3]), position)
 
 def p_expr_binary(p):
     '''
@@ -286,12 +263,16 @@ def p_expr_literal(p):
     position = getPosition(p, 1)
     p[0] = expr.Literal(p[1], position)
 
-def p_expr_variable(p):
+def p_expr_symbol(p):
     '''
     expr    : '@' IDENTIFIER
+            | symbol
     '''
-    position = getPosition(p, 2)
-    p[0] = expr.Variable(p[2], position)
+    if len(p) == 2:
+        p[0] = expr.Symbol(p[1][0], p[1][1])
+    else:
+        position = getPosition(p, 2)
+        p[0] = expr.Symbol([p[2]], position)
 
 def p_type(p):
     '''
