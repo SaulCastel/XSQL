@@ -137,23 +137,35 @@ def p_alter_drop(p):
    '''
    p[0] = stmt.AltertDROP(p[3],p[5],BaseEnUso)
 
-def p_insert_fila(p):
-   '''
-   stmt : INSERT INTO IDENTIFIER '(' List_identificadores ')' VALUES '(' List_identificadores ')'   
-   '''
-   p[0] = stmt.insertINTO(p[3],p[5],p[9],BaseEnUso)
-
-
-def p_lista_identificadores(p):
+def p_insert(p):
     '''
-    List_identificadores    : List_identificadores ',' IDENTIFIER
-                            | IDENTIFIER
+    stmt : INSERT INTO IDENTIFIER '(' identifiers ')' VALUES '(' exprs ')'   
+    '''
+    position = getPosition(p, 1)
+    p[0] = stmt.Insert(BaseEnUso, p[3], p[5], p[9], position)
+
+def p_identifiers(p):
+    '''
+    identifiers : identifiers ',' IDENTIFIER
+                | IDENTIFIER
     '''
     if len(p) == 2:
         p[0] = [p[1]]
     else:
         p[0] = p[1]
         p[0].append(p[3])
+
+def p_exprs(p):
+    '''
+    exprs   : exprs ',' expr
+            | expr
+    '''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = p[1]
+        p[0].append(p[3])
+        
     
 def p_stmt_variable(p):
     '''
