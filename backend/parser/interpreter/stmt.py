@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+from parser.interpreter.database import dml
 path = 'databases/'
 
 class Select:
@@ -40,19 +41,16 @@ class createTable:
        self.NameTable =NameTable
        
     def interpret(self):
-        try:
-            nombreArchivo = globals()['path'] + self.base +'.xml'
-            doc = ET.parse(nombreArchivo)
-            raiz = doc.getroot()
+        nombreArchivo = globals()['path'] + self.base +'.xml'
+        doc = ET.parse(nombreArchivo)
+        raiz = doc.getroot()
 
-            Tabla = ET.SubElement(raiz, self.NameTable)
-            Columnas =ET.SubElement(Tabla, "columns")
-            for column in self.column:
-                Columnas.append(ET.Element(column['name'], attrib=column['attrib']))
-            Tabla.append(ET.Element('records'))
-            writeTreeToFile(doc, nombreArchivo)
-        except Exception as error:
-            print(error)
+        Tabla = ET.SubElement(raiz, self.NameTable)
+        Columnas =ET.SubElement(Tabla, "columns")
+        for column in self.column:
+            Columnas.append(ET.Element(column['name'], attrib=column['attrib']))
+        Tabla.append(ET.Element('records'))
+        writeTreeToFile(doc, nombreArchivo)
         return("Tabla Creda")
 
 class AltertADD:
@@ -167,6 +165,17 @@ class insertINTO:
             xml_tree.write(nombreArchivo)            
 
         return "Se finalizo"
+
+class Insert:
+    def __init__(self, database, table, selection, values, position):
+        self.database = database
+        self.table = table
+        self.selection = selection
+        self.values = values
+        self.position = position
+
+    def interpret(self):
+        dml.Insert(self.database, self.table, self.selection, self.values, self.position)
 
 class usar: 
     def __init__(self,uso) -> None:
