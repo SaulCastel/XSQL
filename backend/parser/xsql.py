@@ -127,9 +127,9 @@ def p_column_key_type(p):
 
 def p_alter_add(p):
    '''
-   stmt : ALTER TABLE IDENTIFIER ADD IDENTIFIER type
+   stmt : ALTER TABLE IDENTIFIER ADD column_declaration
    '''
-   p[0] = stmt.AltertADD(p[3],p[5],BaseEnUso,p[6])
+   p[0] = stmt.AltertADD(p[3],p[5],BaseEnUso)
 
 def p_alter_drop(p):
    '''

@@ -56,26 +56,40 @@ class createTable:
         return("Tabla Creda")
 
 class AltertADD:
-    def __init__(self,NameTable,column,base, type) -> None:
+    def __init__(self,NameTable,column,base) -> None:
        self.base=base
        self.column=column
        self.NameTable =NameTable
-       self.type = type
 
     def interpret(self):
-        nombreArchivo=self.base +'.xml'
-        tree = ET.parse(nombreArchivo)
-        root = tree.getroot()
+        nombreArchivo = globals()['path'] + self.base +'.xml'
+        doc = ET.parse(nombreArchivo)
+        raiz = doc.getroot()
+     
+        table = raiz.find(self.NameTable)
+        columnas = table.find('columns')
+        
+        columnas.append(ET.Element(self.column['name'], attrib=self.column['attrib']))
+        #print('ggggggggggggggggg')
+        writeTreeToFile(doc, nombreArchivo)
+       
+       
+       
+       
+        #alter table hola add HHHHHHHHH int;
+        #nombreArchivo=self.base +'.xml'
+        #tree = ET.parse(nombreArchivo)
+        #root = tree.getroot()
 
-        for tabla in root.findall(".//Tabla[@identificator='" + self.NameTable + "']"):
-            for  columnas in tabla.findall(".//COLUMNAS"):
-                nueva_columna=ET.Element('COLUMNA',tipo=self.type)
-                nueva_columna.text = self.column
-            columnas.append(nueva_columna)
+        #for tabla in root.findall(".//Tabla[@identificator='" + self.NameTable + "']"):
+        #    for  columnas in tabla.findall(".//COLUMNAS"):
+        #        nueva_columna=ET.Element('COLUMNA',tipo=self.type)
+        #        nueva_columna.text = self.column
+        #    columnas.append(nueva_columna)
 
 
-        tree.write(nombreArchivo)
-        return "Columna Agregada"
+        #tree.write(nombreArchivo)
+        #return "Columna Agregada"
 
 
 class AltertDROP:
@@ -86,19 +100,39 @@ class AltertDROP:
        
 
     def interpret(self):
-        nombreArchivo=self.base +'.xml'
-        xml_tree = ET.parse(nombreArchivo)
-        root = xml_tree.getroot()
+        nombreArchivo = globals()['path'] + self.base +'.xml'
+        doc = ET.parse(nombreArchivo)
+        raiz = doc.getroot()
 
-        for tabla in root.findall(".//Tabla[@identificator='" + self.NameTable + "']"):
-            for columnas in tabla.findall(".//COLUMNAS"):
-                for columna in columnas.findall(".//COLUMNA"):
-                    if columna.text == self.TextColumn:
-                        columnas.remove(columna)
-                        xml_tree.write(nombreArchivo)
-                        return "Columna Eliminada"
+        table = raiz.find(self.NameTable)
+        columnas = table.find('columns')
 
-        return "Columna no encontrada"
+        columnas.remove(columnas.find(self.TextColumn))
+        
+
+        filas = table.find('records')
+        fila = filas.findall('record')
+        print(fila)
+        for element in fila:
+            print(element)
+            element.remove(element.find(self.TextColumn))
+        #fila.remove(fila.findall(self.TextColumn))
+        writeTreeToFile(doc, nombreArchivo)
+
+        #alter table tabla_ejemplo drop col_foranea;
+        #nombreArchivo=self.base +'.xml'
+        #xml_tree = ET.parse(nombreArchivo)
+        #root = xml_tree.getroot()
+
+        #for tabla in root.findall(".//Tabla[@identificator='" + self.NameTable + "']"):
+        #    for columnas in tabla.findall(".//COLUMNAS"):
+        #        for columna in columnas.findall(".//COLUMNA"):
+        #            if columna.text == self.TextColumn:
+        #                columnas.remove(columna)
+        #                xml_tree.write(nombreArchivo)
+        #                return "Columna Eliminada"
+
+        #return "Columna no encontrada"
 
 class insertINTO:
     def __init__(self,NameTable,identificatorColumn,ValColumn,base) -> None:
