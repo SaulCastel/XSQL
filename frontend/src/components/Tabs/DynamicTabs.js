@@ -1,12 +1,14 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Tab, Tabs, Button } from "react-bootstrap";
 import { Editor } from "@monaco-editor/react";
+// import axios from 'axios';
 
 const DynamicTabs = forwardRef((props, ref) => {
   const [key, setKey] = useState("query1");
   const [tabs, setTabs] = useState([
     { key: "query1", title: "Query 1", content: "Contenido de la pestaña 1" },
   ]);
+  const [data, setData] = useState({});
 
   const addTab = () => {
     const newKey = `query${tabs.length + 1}`;
@@ -28,9 +30,15 @@ const DynamicTabs = forwardRef((props, ref) => {
   }));
 
   const handleExecuteQuery2 = () => {
-    // Puedes realizar alguna lógica específica aquí, si es necesario
-    console.log(`Ejecutando consulta para la pestaña `);
+    // Obtener el contenido del tab actual
+    const tabContent = props.sqlContent[key];
+
+    const contenido = `Enviando: {"input": "${tabContent}"}`;
+
+    // Actualizar el estado con el contenido del tab actual
+    setData({ ...data, [key]: contenido });
   };
+
 
   return (
     <div className='col-10'>
@@ -72,6 +80,7 @@ const DynamicTabs = forwardRef((props, ref) => {
                         }}
                         // value={queryResult}
                       />
+                      {/* <Button className="px-3 "  onClick={handleExecuteQuery2}>Temporal RUN</Button> */}
                     </div>
                     <div className='col-12 '>
                       <h5>Consola</h5>
@@ -84,6 +93,7 @@ const DynamicTabs = forwardRef((props, ref) => {
                           readOnly: true,
                           wordWrap: 'on',
                         }}
+                        value={data[key] || ''}
                       />
                     </div>
                   </div>
