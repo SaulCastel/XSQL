@@ -11,10 +11,17 @@ class Select:
             print(expr[0].interpret(), expr[1], sep=' AS ')
 
 class SelectFrom:
-    def __init__(self, selection:list, table:str, condition):
-        self.selection = selection
-        self.table = table
+    def __init__(self, database, tableName, returnExprs, condition, position):
+        self.database = database
+        self.tableName = tableName
+        self.returnExprs = returnExprs
         self.condition = condition
+        self.position = position
+
+    def interpret(self, parserState:dict):
+        parserState['result'].update({
+            self.tableName: dml.Select(self.position, self.database, self.tableName, self.returnExprs, self.condition)
+        })
 
 def writeTreeToFile(tree, file):
     ET.indent(tree)
@@ -181,5 +188,5 @@ class usar:
     def __init__(self,uso) -> None:
         self.uso = uso
     
-    def interpret(self):
+    def interpret(self, parserState):
         return self.uso
