@@ -183,7 +183,8 @@ def p_stmt_select_from(p):
     stmt    : SELECT '*' FROM IDENTIFIER where
             | SELECT selection_list FROM IDENTIFIER where
     '''
-    p[0] = stmt.SelectFrom(p[2], p[4], p[5])
+    position = getPosition(p, 1)
+    p[0] = stmt.SelectFrom(BaseEnUso, p[4], p[2], p[5], position)
 
 def p_stmt_select(p):
     '''
@@ -219,14 +220,16 @@ def p_where(p):
     where   : WHERE condition
             | empty
     '''
-    pass
+    if len(p) == 3:
+        p[0] = p[2]
 
 def p_condition_chain(p):
     '''
     condition   : condition AND condition
                 | condition OR condition
     '''
-    pass
+    position = getPosition(p, 2)
+    p[0] = expr.Binary(p[1], p[2], p[3], position)
 
 def p_condition_base(p):
     '''
@@ -237,7 +240,9 @@ def p_condition_base(p):
                 | symbol '=' expr
                 | symbol NOT_EQUALS expr
     '''
-    pass
+    position = getPosition(p, 2)
+    symbol = expr.Symbol(p[1][0], p[1][1])
+    p[0] = expr.Binary(symbol, p[2], p[3], position)
 
 def p_symbol(p):
     '''
@@ -245,10 +250,10 @@ def p_symbol(p):
             | IDENTIFIER
     '''
     if len(p) == 2:
-        p[0] = ([p[1]], getPosition(p, 1))
+        p[0] = [p[1], getPosition(p, 1)]
     else:
-        position = p[1][1]
-        p[0] = (p[1].append(p[3]), position)
+        p[0] = p[1]
+        p[0][0] += p[2] + p[3]
 
 def p_expr_binary(p):
     '''
@@ -302,7 +307,7 @@ def p_expr_symbol(p):
         p[0] = expr.Symbol(p[1][0], p[1][1])
     else:
         position = getPosition(p, 2)
-        p[0] = expr.Symbol([p[2]], position)
+        p[0] = expr.Symbol(p[2], position)
 
 def p_type(p):
     '''

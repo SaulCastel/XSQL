@@ -1,3 +1,4 @@
+from typing import Any
 from .exceptions import RuntimeError
 from datetime import date, datetime
 
@@ -52,3 +53,10 @@ def div(left, right, position):
     lefttype = type(left).__name__
     righttype = type(right).__name__
     raise RuntimeError(f'no se puede dividir {lefttype} con {righttype}', position)
+
+def cast(value:str, t:str) -> Any:
+    if t == 'int':
+        return int(value)
+    elif t == 'decimal':
+        return float(value)
+    #TODO, add missing types
