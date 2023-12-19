@@ -38,6 +38,13 @@ function Tools({ onNewQuery, onExecuteQuery }) {
                             EXPORTAR
                         </Button>
                     </ButtonGroup>
+                    <ButtonGroup className="me-2">
+                        <DropdownButton as={ButtonGroup} title="REPORTES" id="bg-nested-dropdown" variant="success">
+                            <Dropdown.Item eventKey="1" >REPORTE DE ERRORES</Dropdown.Item>
+                            <Dropdown.Item eventKey="2" >TABLA DE SÍMBOLOS</Dropdown.Item>
+                            <Dropdown.Item eventKey="3" >AST</Dropdown.Item>
+                        </DropdownButton>
+                    </ButtonGroup>
                 </ButtonToolbar>
             </div>
 
