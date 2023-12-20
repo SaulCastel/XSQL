@@ -167,16 +167,22 @@ def p_exprs(p):
         p[0].append(p[3])
         
     
-def p_stmt_variable(p):
+def p_stmt_declare(p):
     '''
     stmt    : DECLARE '@' IDENTIFIER AS type
             | DECLARE '@' IDENTIFIER type
     '''
-    position = getPosition(p, 2)
     if len(p) == 6:
-        p[0] = stmt.Declare(p[3], p[5], position)
+        p[0] = stmt.Declare(p[3], p[5])
     else:
-        p[0] = stmt.Declare(p[3], p[4], position)
+        p[0] = stmt.Declare(p[3], p[4])
+
+def p_stmt_assignment(p):
+    '''
+    stmt    : SET '@' IDENTIFIER '=' expr
+    '''
+    position = getPosition(p, 3)
+    p[0] = stmt.Set(p[3], p[5], position)
 
 def p_stmt_select_from(p):
     '''

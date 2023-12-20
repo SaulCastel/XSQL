@@ -87,5 +87,5 @@ class Symbol(Expr):
     def interpret(self, context:Context):
         search = self.key.split('.')
         for i in range(0,len(search)-1):
-            context = context.get(search[i]).value
-        return context.get(search[-1]).value
+            context = context.get(search[i], self.position).value
+        return context.get(search[-1], self.position).value

@@ -15,6 +15,7 @@ Start the virtual environment and install the pacakages inside requirements.txt:
 Start the backend's dev server by running:
 
     $ uvicorn main:app --reload
+    # add '--loop asyncio' on Windows
 
 ### REPL
 You may also use the bundled REPL to test the program:

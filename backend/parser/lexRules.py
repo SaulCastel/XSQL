@@ -33,7 +33,8 @@ reserved = {
     'reference':'REFERENCE',
     'key':'KEY',
     'not':'NOT',
-    'null':'NULL'
+    'null':'NULL',
+    'set':'SET',
 }
 
 tokens = [
