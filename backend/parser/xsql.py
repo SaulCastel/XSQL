@@ -5,6 +5,8 @@ from . import lexRules
 from .lexRules import tokens
 import re
 
+from .interpreter import Nativas 
+from .interpreter import cadenas
 BaseEnUso = '  '
 
 def getPosition(p, token:int):
@@ -79,7 +81,7 @@ def p_table_structure(p):
 
 def p_column_foreign(p):
     '''
-    column_declaration  : IDENTIFIER type REFERENCE IDENTIFIER '(' IDENTIFIER ')'
+    column_declaration  : IDENTIFIER type nullity REFERENCE IDENTIFIER '(' IDENTIFIER ')'
     '''
     p[0] = {
         'name': p[1],
@@ -87,7 +89,7 @@ def p_column_foreign(p):
             'type': p[2],
             'null': 'no',
             'key': 'foreign',
-            'reference': f'{p[4]}.{p[6]}'
+            'reference': f'{p[5]}.{p[7]}'
         }
     }
 
@@ -292,6 +294,31 @@ def p_expr_symbol(p):
         position = getPosition(p, 2)
         p[0] = expr.Symbol([p[2]], position)
 
+def p_expr_concatena(p):
+    '''
+    expr    :   CONCATENAR '(' expr ',' expr ')' 
+    '''
+    p[0] = Nativas.Concatenar(p[3],p[5])
+
+def p_expr_substrae(p):
+    '''
+    expr    :   SUBSTRAER '(' expr ',' expr ',' expr ')' 
+    '''
+    p[0] = Nativas.Substaer(p[3],p[5],p[7])
+
+
+def p_expr_hoy(p):
+    '''
+    expr    :   HOY '(' ')' 
+    '''
+    p[0] = Nativas.hoy()
+
+def p_expr_contar(p):
+    '''
+    expr     : CONTAR '(' '*' ')' FROM IDENTIFIER where   
+    '''
+    p[0] = Nativas.contar(p[6],p[8],BaseEnUso)
+
 def p_type(p):
     '''
     type    : DECIMAL
@@ -306,7 +333,18 @@ def p_type_strings(p):
     type    : NCHAR '(' INT_LITERAL ')'
             | NVARCHAR '(' INT_LITERAL ')'
     '''
-    pass
+    #p[0] = p[1]
+    if str(p[1])=="nchar":
+        if int(p[3])>1 and int(p[3])<4000:       
+            p[0]="nchar ("+ str(p[3]) + ")"
+        else:
+            raise ValueError("Error: El valor de nchar debe estar entre 1 y 4000")
+    else:
+        if int(p[3])<2000000:
+            p[0]="nvarchar ("+int(p[3])+")"
+        else:
+            raise ValueError("Error: El valor maxiomo de nvarchar es de 2,000,000")
+   # p[0] = cadenas.TiposDeCadenas(p[1],p[3])
 
 def p_empty(p):
     '''
