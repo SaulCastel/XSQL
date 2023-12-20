@@ -1,10 +1,20 @@
 from parser.interpreter.exceptions import RuntimeError
 from parser import xsql
 from fastapi import FastAPI, Body
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Annotated
 import uvicorn
 
 app = FastAPI()
+
+# Configuración CORS para permitir todas las solicitudes desde cualquier origen
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Puedes ajustar esto a los dominios permitidos
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post('/interpret')
 def interpret(body: Annotated[dict, Body()]):
