@@ -37,7 +37,8 @@ reserved = {
     'concatenar':'CONCATENAR',
     'substraer':'SUBSTRAER',
     'hoy':'HOY',
-    'contar':'CONTAR'
+    'contar':'CONTAR',
+    'set':'SET'
 }
 
 tokens = [

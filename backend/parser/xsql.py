@@ -4,10 +4,8 @@ from .interpreter import stmt
 from . import lexRules
 from .lexRules import tokens
 import re
-
 from .interpreter import Nativas 
 from .interpreter import cadenas
-BaseEnUso = '  '
 
 def getPosition(p, token:int):
     '''Returns a tuple containing the line and index of a token'''
@@ -47,26 +45,20 @@ def p_usar_F(p):
    '''
    stmt    : USAR IDENTIFIER
    '''
-   p[0] = stmt.usar(p[2])
-   global BaseEnUso
-   BaseEnUso = p[2]
+   p[0] = stmt.Usar(p[2])
 
 def p_create_base(p):
     '''
     stmt    : CREATE DATA BASE IDENTIFIER
     '''
-    global BaseEnUso
-    BaseEnUso = p[4]
-
-    p[0] = stmt.createBase(p[4])
-
+    p[0] = stmt.CreateBase(p[4])
 
 def p_create_table(p):
     '''
     stmt     : CREATE TABLE IDENTIFIER '(' table_structure ')'
 
     '''
-    p[0]= stmt.createTable(p[3],p[5],BaseEnUso)
+    p[0]= stmt.CreateTable(p[3], p[5])
 
 def p_table_structure(p):
     '''
@@ -131,49 +123,68 @@ def p_alter_add(p):
    '''
    stmt : ALTER TABLE IDENTIFIER ADD column_declaration
    '''
-   p[0] = stmt.AltertADD(p[3],p[5],BaseEnUso)
+   p[0] = stmt.AlterADD(p[3], p[5])
 
 def p_alter_drop(p):
    '''
    stmt : ALTER TABLE IDENTIFIER DROP IDENTIFIER 
    '''
-   p[0] = stmt.AltertDROP(p[3],p[5],BaseEnUso)
+   p[0] = stmt.AlterDROP(p[3], p[5])
 
-def p_insert_fila(p):
-   '''
-   stmt : INSERT INTO IDENTIFIER '(' List_identificadores ')' VALUES '(' List_identificadores ')'   
-   '''
-   p[0] = stmt.insertINTO(p[3],p[5],p[9],BaseEnUso)
-
-
-def p_lista_identificadores(p):
+def p_insert(p):
     '''
-    List_identificadores    : List_identificadores ',' IDENTIFIER
-                            | IDENTIFIER
+    stmt : INSERT INTO IDENTIFIER '(' identifiers ')' VALUES '(' exprs ')'   
+    '''
+    position = getPosition(p, 1)
+    p[0] = stmt.Insert(p[3], p[5], p[9], position)
+
+def p_identifiers(p):
+    '''
+    identifiers : identifiers ',' IDENTIFIER
+                | IDENTIFIER
     '''
     if len(p) == 2:
         p[0] = [p[1]]
     else:
         p[0] = p[1]
         p[0].append(p[3])
+
+def p_exprs(p):
+    '''
+    exprs   : exprs ',' expr
+            | expr
+    '''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = p[1]
+        p[0].append(p[3])
+        
     
-def p_stmt_variable(p):
+def p_stmt_declare(p):
     '''
     stmt    : DECLARE '@' IDENTIFIER AS type
             | DECLARE '@' IDENTIFIER type
     '''
-    position = getPosition(p, 2)
     if len(p) == 6:
-        p[0] = stmt.Declare(p[3], p[5], position)
+        p[0] = stmt.Declare(p[3], p[5])
     else:
-        p[0] = stmt.Declare(p[3], p[4], position)
+        p[0] = stmt.Declare(p[3], p[4])
+
+def p_stmt_assignment(p):
+    '''
+    stmt    : SET '@' IDENTIFIER '=' expr
+    '''
+    position = getPosition(p, 3)
+    p[0] = stmt.Set(p[3], p[5], position)
 
 def p_stmt_select_from(p):
     '''
     stmt    : SELECT '*' FROM IDENTIFIER where
             | SELECT selection_list FROM IDENTIFIER where
     '''
-    p[0] = stmt.SelectFrom(p[2], p[4], p[5])
+    position = getPosition(p, 1)
+    p[0] = stmt.SelectFrom(p[4], p[2], p[5], position)
 
 def p_stmt_select(p):
     '''
@@ -209,14 +220,16 @@ def p_where(p):
     where   : WHERE condition
             | empty
     '''
-    pass
+    if len(p) == 3:
+        p[0] = p[2]
 
 def p_condition_chain(p):
     '''
     condition   : condition AND condition
                 | condition OR condition
     '''
-    pass
+    position = getPosition(p, 2)
+    p[0] = expr.Binary(p[1], p[2], p[3], position)
 
 def p_condition_base(p):
     '''
@@ -227,7 +240,9 @@ def p_condition_base(p):
                 | symbol '=' expr
                 | symbol NOT_EQUALS expr
     '''
-    pass
+    position = getPosition(p, 2)
+    symbol = expr.Symbol(p[1][0], p[1][1])
+    p[0] = expr.Binary(symbol, p[2], p[3], position)
 
 def p_symbol(p):
     '''
@@ -235,10 +250,10 @@ def p_symbol(p):
             | IDENTIFIER
     '''
     if len(p) == 2:
-        p[0] = ([p[1]], getPosition(p, 1))
+        p[0] = [p[1], getPosition(p, 1)]
     else:
-        position = p[1][1]
-        p[0] = (p[1].append(p[3]), position)
+        p[0] = p[1]
+        p[0][0] += p[2] + p[3]
 
 def p_expr_binary(p):
     '''
@@ -292,7 +307,7 @@ def p_expr_symbol(p):
         p[0] = expr.Symbol(p[1][0], p[1][1])
     else:
         position = getPosition(p, 2)
-        p[0] = expr.Symbol([p[2]], position)
+        p[0] = expr.Symbol(p[2], position)
 
 def p_expr_concatena(p):
     '''
@@ -317,7 +332,7 @@ def p_expr_contar(p):
     '''
     expr     : CONTAR '(' '*' ')' FROM IDENTIFIER where   
     '''
-    p[0] = Nativas.contar(p[6],p[8],BaseEnUso)
+    p[0] = Nativas.contar(p[6],p[8])
 
 def p_type(p):
     '''
