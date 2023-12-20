@@ -24,13 +24,7 @@ class Context:
 
     def declare(self, key: str, value: Any, t:Any):
         '''Declare a new symbol in the current context/scope'''
-        self.symbols[key] = Symbol(key, value, self.getType(t))
-
-    def getType(self, t:str):
-        if t == 'int':
-            return int
-        elif t == 'decimal':
-            return float
+        self.symbols[key] = Symbol(key, value, t)
 
     def set(self, key: str, value: Any, position:tuple):
         '''
