@@ -2,7 +2,6 @@ import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Tab, Tabs, Button } from "react-bootstrap";
 import { Editor } from "@monaco-editor/react";
 
-// Función para generar una línea para la tabla (superior, intermedia o inferior)
 const generateTableLine = (columnSizes, position) => {
   const line = Object.keys(columnSizes)
     .map((columnIndex) => '═'.repeat(columnSizes[columnIndex]))
@@ -11,7 +10,6 @@ const generateTableLine = (columnSizes, position) => {
   return position === 'top' ? `╔${line}╗` : position === 'middle' ? `╠${line}╣` : `╚${line}╝`;
 };
 
-// Función para generar una fila de la tabla
 const generateTableRow = (rowData, columnSizes) => {
   return `║ ${Object.keys(columnSizes)
     .map(
@@ -36,7 +34,7 @@ const DynamicTabs = forwardRef((props, ref) => {
   const [queryResult, setQueryResult] = useState({});
 
   const salida = {
-    'output': ['Compiled Successfully', '2 tablas mostradas'],
+    'output': ['Compiled Successfully', '5 tablas mostradas'],
     'result': {
       'Ciudadano': {
         'header': ['Nombre', 'CUI', 'Departamento'],
@@ -45,59 +43,84 @@ const DynamicTabs = forwardRef((props, ref) => {
           ['Alberto', '2012345678901', 'Jalapa'],
           ['María', '3012345678901', 'Huehuetenango'],
         ]
+      },
+      'Mascotas': {
+        'header': ['Nombre', 'Tipo', 'Sexo'],
+        'records': [
+          ['Chispas', 'Gato', 'Macho'],
+          ['Flofy', 'Pez', 'Macho'],
+          ['Kira', 'Perro', 'Hembra'],
+        ]
+      },
+      'Cursos aprobados': {
+        'header': ['Estudiante', 'Curso', 'Nota'],
+        'records': [
+          ['Ana', 'Matemáticas', 'A'],
+          ['Carlos', 'Historia', 'B'],
+          ['Elena', 'Física', 'A+'],
+        ]
+      },
+      'Materiales de construcción': {
+        'header': ['Material', 'Cantidad', 'Precio'],
+        'records': [
+          ['Ladrillos', '1000', '$500'],
+          ['Cemento', '10 bolsas', '$50'],
+          ['Madera', '50 tablones', '$200'],
+        ]
+      },
+      'Recetas': {
+        'header': ['Plato', 'Ingredientes', 'Tiempo de preparación'],
+        'records': [
+          ['Lasagna', 'Pasta, carne molida, salsa de tomate, queso', '1 hora'],
+          ['Ensalada César', 'Lechuga, pollo, aderezo César', '30 minutos'],
+          ['Tacos', 'Tortillas, carne asada, guacamole', '45 minutos'],
+        ]
       }
-      // ,
-      // 'Mascotas': {
-      //   'header': ['Nombre', 'Tipo', 'Sexo'],
-      //   'records': [
-      //     ['Chispas', 'Gato', 'Macho'],
-      //     ['Flofy', 'Pez', 'Macho'],
-      //     ['Kira', 'Perro', 'Hembra'],
-      //   ]
-      // }
     }
   };
 
-  const handleOutput = (tabKey) => {
+
+  const handleOutput = () => {
     const { output: outputData, result: resultData } = salida;
     setOutput(outputData);
     setResult(resultData);
-    console.log(result)
-
-    const tables = ['Ciudadano', 'Mascotas'];
-    const headers = tables.reduce((acc, tableName) => {
-      const table = result[tableName];
-      if (table) {
-        acc.push(...table.header);
-      }
-      return acc;
-    }, []);
-
-    const rows = tables.reduce((acc, tableName) => {
-      const table = result[tableName];
-      if (table) {
-        acc.push(...table.records.map((record) => record.map((value) => value.trim())));
-      }
-      return acc;
-    }, []);
-
-    const columnSizes = headers.reduce((sizes, header, columnIndex) => {
-      const maxContentLength = Math.max(
-        header.length,
-        ...rows.map((row) => (`${row[columnIndex]}`.trim() !== '') ? `${row[columnIndex]}`.length : 0)
-      );
-      sizes[columnIndex] = maxContentLength + 2;
-      return sizes;
-    }, {});
-
-    const formattedTable = `${generateTableLine(columnSizes, 'top')}
-${generateTableRow(headers, columnSizes)}
-${generateTableLine(columnSizes, 'middle')}
-${rows.map((row) => generateTableRow(row, columnSizes)).join('\n')}
-${generateTableLine(columnSizes, 'bottom')}`;
-
-    setQueryResult(formattedTable);
+    console.log(resultData);
+  
+    // Obtener headers y registros de todas las tablas mencionadas
+    const tables = Object.keys(resultData);
+  
+    const formattedTables = tables.map((tableName) => {
+      const table = resultData[tableName];
+      if (!table) return '';
+  
+      const headers = table.header;
+      const rows = table.records.map((record) => record.map((value) => value.trim()));
+  
+      // Calcular tamaños de columna
+      const columnSizes = headers.reduce((sizes, header, columnIndex) => {
+        const maxContentLength = Math.max(
+          header.length,
+          ...rows.map((row) => (`${row[columnIndex]}`.trim() !== '') ? `${row[columnIndex]}`.length : 0)
+        );
+        sizes[columnIndex] = maxContentLength + 2; // Tamaño fijo de 2 caracteres adicionales
+        return sizes;
+      }, {});
+  
+      // Formatear la tabla con nombre
+      const formattedTable = `
+  Tabla: ${tableName}
+  ${generateTableLine(columnSizes, 'top')}
+  ${generateTableRow(headers, columnSizes)}
+  ${generateTableLine(columnSizes, 'middle')}
+  ${rows.map((row) => generateTableRow(row, columnSizes)).join('\n  ')}
+  ${generateTableLine(columnSizes, 'bottom')}`;
+  
+      return formattedTable;
+    });
+  
+    setQueryResult(formattedTables.join('\n\n'));
   };
+  
 
   const addTab = () => {
     const newKey = `query${tabs.length + 1}`;
@@ -121,6 +144,7 @@ ${generateTableLine(columnSizes, 'bottom')}`;
     const tabContent = props.sqlContent[key];
     const contenido = `Enviando: {"input": "${tabContent}"}`;
     setData({ ...data, [key]: contenido });
+    handleOutput();
   };
 
   return (
@@ -157,13 +181,16 @@ ${generateTableLine(columnSizes, 'bottom')}`;
                         height='500px'
                         language='plaintext'
                         theme='vs-dark'
+                        value={queryResult || ''}
                         options={{
                           readOnly: true,
-                          wordWrap: 'on',
+                          wordWrap: 'off',
+                          lineNumbers: false,
+                          minimap: {
+                            enabled: false,
+                          },
                         }}
-                        value={queryResult || ''}
                       />
-                      {/* <Button className="px-3 " onClick={handleOutput}>Temporal RUN</Button> */}
                     </div>
                     <div className='col-12 '>
                       <h5>Consola</h5>
@@ -175,6 +202,7 @@ ${generateTableLine(columnSizes, 'bottom')}`;
                         options={{
                           readOnly: true,
                           wordWrap: 'on',
+                          overflowX: 'auto',
                         }}
                         value={output.join('\n')}
                       />
