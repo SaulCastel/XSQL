@@ -1,14 +1,44 @@
-import xml.etree.ElementTree as ET
+from parser.interpreter import expr
 from parser.interpreter.database import dml
+from parser.interpreter.context import Context
+from abc import ABC, abstractmethod
+import xml.etree.ElementTree as ET
 path = 'databases/'
 
-class Select:
-    def __init__(self, exprs:list) -> None:
+class Stmt(ABC):
+    @abstractmethod
+    def interpret(self, context:Context, parserState:dict):
+        pass
+
+class Declare(Stmt):
+    def __init__(self, key, t):
+        self.key = key
+        self.t = t
+
+    def interpret(self, context:Context, parserState:dict):
+        context.declare(self.key, None, self.t)
+
+class Set(Stmt):
+    def __init__(self, key, expr, position):
+        self.key = key
+        self.expr = expr
+        self.position = position
+
+    def interpret(self, context: Context, parserState: dict):
+        value = self.expr.interpret(context)
+        context.set(self.key, value, self.position)
+
+class Select(Stmt):
+    def __init__(self, exprs:list[tuple[expr.Expr,str]]) -> None:
         self.exprs = exprs
 
-    def interpret(self):
+    def interpret(self, context:Context, parserState:dict):
+        header = []
+        columns = []
         for expr in self.exprs:
-            print(expr[0].interpret(), expr[1], sep=' AS ')
+            columns.append(expr[0].interpret(context))
+            header.append(expr[1] if expr[1] else str(expr[0]))
+        parserState['result'].append({'header':header, 'records':[columns]})
 
 class SelectFrom:
     def __init__(self, database, tableName, returnExprs, condition, position):
@@ -18,10 +48,9 @@ class SelectFrom:
         self.condition = condition
         self.position = position
 
-    def interpret(self, parserState:dict):
-        parserState['result'].update({
-            self.tableName: dml.Select(self.position, self.database, self.tableName, self.returnExprs, self.condition)
-        })
+    def interpret(self, context, parserState:dict):
+        result = dml.Select(self.position, self.database, self.tableName, self.returnExprs, self.condition)
+        parserState['result'].append(result)
 
 def writeTreeToFile(tree, file):
     ET.indent(tree)
@@ -184,9 +213,9 @@ class Insert:
     def interpret(self):
         dml.Insert(self.database, self.table, self.selection, self.values, self.position)
 
-class usar: 
+class usar(Stmt): 
     def __init__(self,uso) -> None:
         self.uso = uso
     
-    def interpret(self, parserState):
+    def interpret(self, context, parserState):
         return self.uso

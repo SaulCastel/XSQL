@@ -1,4 +1,5 @@
 from parser.interpreter.exceptions import RuntimeError
+from parser.interpreter.context import Context
 from parser import xsql
 from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,11 +23,12 @@ def interpret(body: Annotated[dict, Body()]):
     parserState = {
         'database': '',
         'output': [],
-        'result': {}
+        'result': [],
     }
+    globalContext = Context()
     try:
         for stmt in stmts:
-            stmt.interpret(parserState)
+            stmt.interpret(globalContext, parserState)
     except RuntimeError as error:
         parserState['output'].append(str(error))
     return {

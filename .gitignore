@@ -1,5 +1,5 @@
 apiTest/
-databases/*.xml
+backend/databases/*.xml
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

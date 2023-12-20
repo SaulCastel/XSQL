@@ -47,21 +47,23 @@ def getTableContext(columnsData:dict, record: ET.Element) -> Context:
     context = Context()
     for cell in cells:
         columnType = columnsData[cell.tag]['type']
-        context.declare(cell.tag, operations.cast(cell.text, columnType))
+        context.declare(cell.tag, operations.cast(cell.text, columnType), columnType)
     missingColumns = list(set(columnsData.keys()) - set(map(lambda c: c.tag, cells)))
     for column in missingColumns:
-        context.declare(column, None)
+        columnType = columnsData[column]['type']
+        context.declare(column, None, columnType)
     return context
 
 def interpretReturnExprs(
-        returnExprs:list[tuple[expr.Expr, str|None]],
-        tableContext:Context,
-        columnList:list
+    returnExprs:list[tuple[expr.Expr, str|None]],
+    tableContext:Context,
+    columnList:list,
+    position:tuple
 ) -> list[str]:
     row = []
     if returnExprs == '*':
         for column in columnList:
-            row.append(str(tableContext.get(column).value))
+            row.append(str(tableContext.get(column, position).value))
     else:
         for e in returnExprs:
             row.append(str(e[0].interpret(tableContext)))
@@ -97,11 +99,13 @@ def Select(
             tableContext = getTableContext(columnsData, record)
             result = condition.interpret(tableContext)
             if result:
-                textRecords.append(interpretReturnExprs(returnExprs, tableContext, columnsData.keys()))
+                textRecord = interpretReturnExprs(returnExprs, tableContext, columnsData.keys(), position)
+                textRecords.append(textRecord)
     else:
         for record in xmlRecords.iter('record'):
             tableContext = getTableContext(columnsData, record)
-            textRecords.append(interpretReturnExprs(returnExprs, tableContext, columnsData.keys()))
+            textRecord = interpretReturnExprs(returnExprs, tableContext, columnsData.keys(), position)
+            textRecords.append(textRecord)
     return {
         'header': getTableHeader(returnExprs, columnsData.keys()),
         'records': textRecords
