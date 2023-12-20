@@ -1,7 +1,9 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Tab, Tabs, Button } from "react-bootstrap";
 import { Editor } from "@monaco-editor/react";
+import { setInput } from "../../services";
 
+// Función para generar las líneas y filas de la tabla
 const generateTableLine = (columnSizes, position) => {
   const line = Object.keys(columnSizes)
     .map((columnIndex) => '═'.repeat(columnSizes[columnIndex]))
@@ -19,10 +21,41 @@ const generateTableRow = (rowData, columnSizes) => {
     .join(' ║ ')} ║`;
 };
 
+// Función para generar las tablas formateadas
+const generateFormattedTables = (resultData) => {
+  const tables = Object.keys(resultData);
+  return tables
+    .map((tableName) => {
+      const table = resultData[tableName];
+      if (!table) return '';
+
+      const headers = table.header;
+      const rows = table.records.map((record) => record.map((value) => value.trim()));
+
+      const columnSizes = headers.reduce((sizes, header, columnIndex) => {
+        const maxContentLength = Math.max(
+          header.length,
+          ...rows.map((row) => (`${row[columnIndex]}`.trim() !== '') ? `${row[columnIndex]}`.length : 0)
+        );
+        sizes[columnIndex] = maxContentLength + 2; // Tamaño fijo de 2 caracteres adicionales
+        return sizes;
+      }, {});
+
+      return `
+  Tabla: ${tableName}
+  ${generateTableLine(columnSizes, 'top')}
+  ${generateTableRow(headers, columnSizes)}
+  ${generateTableLine(columnSizes, 'middle')}
+  ${rows.map((row) => generateTableRow(row, columnSizes)).join('\n  ')}
+  ${generateTableLine(columnSizes, 'bottom')}`;
+    })
+    .join('\n\n');
+};
+
 const DynamicTabs = forwardRef((props, ref) => {
   const [key, setKey] = useState("query1");
   const [tabs, setTabs] = useState([
-    { key: "query1", title: "Query 1", content: "Contenido de la pestaña 1" },
+    { key: "query1", title: "Query 1", content: '', output: '' },
   ]);
   const [data, setData] = useState({});
   const [output, setOutput] = useState([]);
@@ -33,98 +66,70 @@ const DynamicTabs = forwardRef((props, ref) => {
   });
   const [queryResult, setQueryResult] = useState({});
 
-  const salida = {
-    'output': ['Compiled Successfully', '5 tablas mostradas'],
-    'result': {
-      'Ciudadano': {
-        'header': ['Nombre', 'CUI', 'Departamento'],
-        'records': [
-          ['Juan', '1012345678901', 'Baja Verapáz'],
-          ['Alberto', '2012345678901', 'Jalapa'],
-          ['María', '3012345678901', 'Huehuetenango'],
-        ]
-      },
-      'Mascotas': {
-        'header': ['Nombre', 'Tipo', 'Sexo'],
-        'records': [
-          ['Chispas', 'Gato', 'Macho'],
-          ['Flofy', 'Pez', 'Macho'],
-          ['Kira', 'Perro', 'Hembra'],
-        ]
-      },
-      'Cursos aprobados': {
-        'header': ['Estudiante', 'Curso', 'Nota'],
-        'records': [
-          ['Ana', 'Matemáticas', 'A'],
-          ['Carlos', 'Historia', 'B'],
-          ['Elena', 'Física', 'A+'],
-        ]
-      },
-      'Materiales de construcción': {
-        'header': ['Material', 'Cantidad', 'Precio'],
-        'records': [
-          ['Ladrillos', '1000', '$500'],
-          ['Cemento', '10 bolsas', '$50'],
-          ['Madera', '50 tablones', '$200'],
-        ]
-      },
-      'Recetas': {
-        'header': ['Plato', 'Ingredientes', 'Tiempo de preparación'],
-        'records': [
-          ['Lasagna', 'Pasta, carne molida, salsa de tomate, queso', '1 hora'],
-          ['Ensalada César', 'Lechuga, pollo, aderezo César', '30 minutos'],
-          ['Tacos', 'Tortillas, carne asada, guacamole', '45 minutos'],
-        ]
-      }
-    }
-  };
+  const salida2 = {
+            'output': ['Compiled Successfully', '5 tablas mostradas'],
+            'result': {
+              'Ciudadano': {
+                'header': ['Nombre', 'CUI', 'Departamento'],
+                'records': [
+                  ['Juan', '1012345678901', 'Baja Verapáz'],
+                  ['Alberto', '2012345678901', 'Jalapa'],
+                  ['María', '3012345678901', 'Huehuetenango'],
+                ]
+              },
+              'Mascotas': {
+                'header': ['Nombre', 'Tipo', 'Sexo'],
+                'records': [
+                  ['Chispas', 'Gato', 'Macho'],
+                  ['Flofy', 'Pez', 'Macho'],
+                  ['Kira', 'Perro', 'Hembra'],
+                ]
+              },
+              'Cursos aprobados': {
+                'header': ['Estudiante', 'Curso', 'Nota'],
+                'records': [
+                  ['Ana', 'Matemáticas', 'A'],
+                  ['Carlos', 'Historia', 'B'],
+                  ['Elena', 'Física', 'A+'],
+                ]
+              },
+              'Materiales de construcción': {
+                'header': ['Material', 'Cantidad', 'Precio'],
+                'records': [
+                  ['Ladrillos', '1000', '$500'],
+                  ['Cemento', '10 bolsas', '$50'],
+                  ['Madera', '50 tablones', '$200'],
+                ]
+              },
+              'Recetas': {
+                'header': ['Plato', 'Ingredientes', 'Tiempo de preparación'],
+                'records': [
+                  ['Lasagna', 'Pasta, carne molida, salsa de tomate, queso', '1 hora'],
+                  ['Ensalada César', 'Lechuga, pollo, aderezo César', '30 minutos'],
+                  ['Tacos', 'Tortillas, carne asada, guacamole', '45 minutos'],
+                ]
+              }
+            }
+          };
 
-
-  const handleOutput = () => {
+  const handleOutput = (salida) => {
     const { output: outputData, result: resultData } = salida;
     setOutput(outputData);
     setResult(resultData);
-    console.log(resultData);
-  
-    // Obtener headers y registros de todas las tablas mencionadas
-    const tables = Object.keys(resultData);
-  
-    const formattedTables = tables.map((tableName) => {
-      const table = resultData[tableName];
-      if (!table) return '';
-  
-      const headers = table.header;
-      const rows = table.records.map((record) => record.map((value) => value.trim()));
-  
-      // Calcular tamaños de columna
-      const columnSizes = headers.reduce((sizes, header, columnIndex) => {
-        const maxContentLength = Math.max(
-          header.length,
-          ...rows.map((row) => (`${row[columnIndex]}`.trim() !== '') ? `${row[columnIndex]}`.length : 0)
-        );
-        sizes[columnIndex] = maxContentLength + 2; // Tamaño fijo de 2 caracteres adicionales
-        return sizes;
-      }, {});
-  
-      // Formatear la tabla con nombre
-      const formattedTable = `
-  Tabla: ${tableName}
-  ${generateTableLine(columnSizes, 'top')}
-  ${generateTableRow(headers, columnSizes)}
-  ${generateTableLine(columnSizes, 'middle')}
-  ${rows.map((row) => generateTableRow(row, columnSizes)).join('\n  ')}
-  ${generateTableLine(columnSizes, 'bottom')}`;
-  
-      return formattedTable;
-    });
-  
-    setQueryResult(formattedTables.join('\n\n'));
+
+    const formattedTables = generateFormattedTables(resultData);
+    setQueryResult(formattedTables);
+
+    const currentTab = tabs.find((tab) => tab.key === key);
+    const updatedTabs = tabs.map((tab) =>
+      tab.key === key ? { ...tab, content: formattedTables, output: outputData.join('\n') } : tab
+    );
+    setTabs(updatedTabs);
   };
-  
 
   const addTab = () => {
     const newKey = `query${tabs.length + 1}`;
-    const newTab = { key: newKey, title: `Query ${tabs.length + 1}`, content: '' };
+    const newTab = { key: newKey, title: `Query ${tabs.length + 1}`, content: '', output: '' };
     setTabs([...tabs, newTab]);
     setKey(newKey);
   };
@@ -141,11 +146,25 @@ const DynamicTabs = forwardRef((props, ref) => {
   }));
 
   const handleExecuteQuery2 = () => {
-    const tabContent = props.sqlContent[key];
-    const contenido = `Enviando: {"input": "${tabContent}"}`;
-    setData({ ...data, [key]: contenido });
-    handleOutput();
+    const tabContent = {
+      "input":props.sqlContent[key]
+    }
+    setData({ ...data, [key]: tabContent });
+    setDataInput(tabContent)
+    // handleOutput();
   };
+
+  const setDataInput = async(tabContent) =>{
+    try{
+      const res = await setInput(tabContent);
+      if(res.status === 200){
+        //Enviando result para generar tabla:
+        handleOutput(res.data)
+      }
+    }catch(err){
+      throw err;
+    }
+  }
 
   return (
     <div className='col-10'>
@@ -181,7 +200,7 @@ const DynamicTabs = forwardRef((props, ref) => {
                         height='500px'
                         language='plaintext'
                         theme='vs-dark'
-                        value={queryResult || ''}
+                        value={tab.content || ''}
                         options={{
                           readOnly: true,
                           wordWrap: 'off',
@@ -204,7 +223,7 @@ const DynamicTabs = forwardRef((props, ref) => {
                           wordWrap: 'on',
                           overflowX: 'auto',
                         }}
-                        value={output.join('\n')}
+                        value={tab.output || ''}
                       />
                     </div>
                   </div>
