@@ -8,7 +8,7 @@ import uvicorn
 
 app = FastAPI()
 
-# Configuración CORS para permitir todas las solicitudes desde cualquier origen
+# # Configuración CORS para permitir todas las solicitudes desde cualquier origen
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Puedes ajustar esto a los dominios permitidos
