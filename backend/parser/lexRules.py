@@ -34,7 +34,11 @@ reserved = {
     'key':'KEY',
     'not':'NOT',
     'null':'NULL',
-    'set':'SET',
+    'concatenar':'CONCATENAR',
+    'substraer':'SUBSTRAER',
+    'hoy':'HOY',
+    'contar':'CONTAR',
+    'set':'SET'
 }
 
 tokens = [

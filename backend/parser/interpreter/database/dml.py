@@ -2,12 +2,8 @@ from parser.interpreter.context import Context
 from parser.interpreter.exceptions import RuntimeError
 from parser.interpreter import expr
 from parser.interpreter import operations
+from . import common
 import xml.etree.ElementTree as ET
-import config
-
-def writeTreeToFile(tree, file):
-    ET.indent(tree)
-    tree.write(file, encoding='utf-8', xml_declaration=True)
 
 def getTableColumns(table:ET.Element) -> dict:
     columns = {}
@@ -15,8 +11,8 @@ def getTableColumns(table:ET.Element) -> dict:
         columns[element.tag] = element.attrib
     return columns
 
-def Insert(database:str, tableName:str, selection:list, values:list, position:tuple):
-    tree = ET.parse(config.pathToDatabases + f'{database}.xml')
+def insert(context:Context, database:str, tableName:str, selection:list, values:list, position:tuple):
+    tree = common.getDatabaseElementTree(database)
     table = tree.find(tableName)
     if table == None:
         raise RuntimeError(f'No se encuentra {tableName} en: {database}', position)
@@ -31,23 +27,22 @@ def Insert(database:str, tableName:str, selection:list, values:list, position:tu
         if selection[i] not in columns.keys():
             raise RuntimeError(f'No se encuentra {selection[i]} en: {tableName}', position)
         columType = columns[selection[i]]['type']
-        value = values[i].interpret()
-        valueType = type(value).__name__
-        if valueType != columType:
+        value = values[i].interpret(context)
+        if not isinstance(value, common.getType(columType)):
             raise RuntimeError(f'Valor para {selection[i]} debe ser {columType}, no {valueType}', position)
         #TODO: raise error on unknown value for foreign key
         column = ET.Element(selection[i])
         column.text = str(value)
         record.append(column)
     records.append(record)
-    writeTreeToFile(tree, path)
+    common.writeTreeToFile(tree, database)
 
-def getTableContext(columnsData:dict, record: ET.Element) -> Context:
+def getTableContext(prev:Context, columnsData:dict, record: ET.Element) -> Context:
     cells = record.findall('./*')
-    context = Context()
+    context = Context(prev)
     for cell in cells:
         columnType = columnsData[cell.tag]['type']
-        context.declare(cell.tag, operations.cast(cell.text, columnType), columnType)
+        context.declare(cell.tag, operations.cast(cell.text, columnType), common.getType(columnType))
     missingColumns = list(set(columnsData.keys()) - set(map(lambda c: c.tag, cells)))
     for column in missingColumns:
         columnType = columnsData[column]['type']
@@ -57,7 +52,7 @@ def getTableContext(columnsData:dict, record: ET.Element) -> Context:
 def interpretReturnExprs(
     returnExprs:list[tuple[expr.Expr, str|None]],
     tableContext:Context,
-    columnList:list,
+    columnList,
     position:tuple
 ) -> list[str]:
     row = []
@@ -82,12 +77,12 @@ def getTableHeader(returnExprs:list[tuple[expr.Expr, str|None]], columnList) -> 
                 header.append(str(item[0]))
     return header
 
-def Select(
-    position:tuple, database:str, tableName:str,
+def selectFrom(
+    context:Context, database:str, tableName:str,
     returnExprs:list[tuple[expr.Expr, str|None]],
-    condition:expr.Binary|None=None
+    condition:expr.Binary|None, position:tuple
 ) -> dict[str, list]:
-    tree = ET.parse(config.pathToDatabases + f'{database}.xml')
+    tree = common.getDatabaseElementTree(database)
     table = tree.find(tableName)
     if not table:
         raise RuntimeError(f'No se encuentra {tableName} en: {database}', position)
@@ -96,14 +91,15 @@ def Select(
     textRecords = []
     if condition:
         for record in xmlRecords.iter('record'):
-            tableContext = getTableContext(columnsData, record)
-            result = condition.interpret(tableContext)
-            if result:
-                textRecord = interpretReturnExprs(returnExprs, tableContext, columnsData.keys(), position)
-                textRecords.append(textRecord)
+            tableContext = getTableContext(context, columnsData, record)
+            conditionPassed = condition.interpret(tableContext)
+            if not conditionPassed:
+                continue
+            textRecord = interpretReturnExprs(returnExprs, tableContext, columnsData.keys(), position)
+            textRecords.append(textRecord)
     else:
         for record in xmlRecords.iter('record'):
-            tableContext = getTableContext(columnsData, record)
+            tableContext = getTableContext(context, columnsData, record)
             textRecord = interpretReturnExprs(returnExprs, tableContext, columnsData.keys(), position)
             textRecords.append(textRecord)
     return {
