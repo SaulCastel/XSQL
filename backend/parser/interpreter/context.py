@@ -2,10 +2,12 @@ from typing import Any, Self
 from parser.interpreter.exceptions import RuntimeError
 
 class Symbol:
-    def __init__(self, key: str, value: Any, t:Any):
+    def __init__(self, key: str, value: Any, t:Any, length:int|None=None):
         self.key = key
         self.value = value
         self.t = t
+        self.length = length
+        self.truncateStr()
 
     def update(self, value):
         '''
@@ -16,15 +18,21 @@ class Symbol:
             valueType = type(value).__name__
             raise RuntimeError(f'Simbolo {self.key} de tipo {self.t} no puede ser reasignado a tipo {valueType}')
         self.value = value
+        self.truncateStr()
+
+    def truncateStr(self):
+        if self.t == str:
+            if len(self.value) > self.length:
+                self.value = self.value[0:self.length]
 
 class Context:
     def __init__(self, prev:Self | None = None) -> None:
         self.prev = prev
         self.symbols = {}
 
-    def declare(self, key: str, value: Any, t:Any):
+    def declare(self, key: str, value: Any, t:Any, length:int|None=None):
         '''Declare a new symbol in the current context/scope'''
-        self.symbols[key] = Symbol(key, value, t)
+        self.symbols[key] = Symbol(key, value, t, length)
 
     def set(self, key: str, value: Any, position:tuple):
         '''

@@ -75,28 +75,34 @@ def p_column_foreign(p):
     '''
     column_declaration  : IDENTIFIER type nullity REFERENCE IDENTIFIER '(' IDENTIFIER ')'
     '''
-    p[0] = {
+    columnData = {
         'name': p[1],
         'attrib': {
-            'type': p[2],
-            'null': 'no',
+            'type': p[2][0],
+            'null': p[3],
             'key': 'foreign',
             'reference': f'{p[5]}.{p[7]}'
         }
     }
+    if p[2][1]:
+        columnData['attrib'].update({'length': p[2][1]})
+    p[0] = columnData
 
 def p_column_declaration(p):
     '''
     column_declaration   : IDENTIFIER type nullity key_type
     '''
-    p[0] = {
+    columnData = {
         'name': p[1],
         'attrib': {
-            'type': p[2],
+            'type': p[2][0],
             'null': 'no' if p[4] == 'primary' else p[3],
             'key': p[4]
         }
     }
+    if p[2][1]:
+        columnData['attrib'].update({'length': p[2][1]})
+    p[0] = columnData
 
 def p_column_nullity(p):
     '''
@@ -341,25 +347,19 @@ def p_type(p):
             | DATE
             | DATETIME
     '''
-    p[0] = p[1]
+    p[0] = (p[1], None)
 
 def p_type_strings(p):
     '''
     type    : NCHAR '(' INT_LITERAL ')'
             | NVARCHAR '(' INT_LITERAL ')'
     '''
-    #p[0] = p[1]
-    if str(p[1])=="nchar":
-        if int(p[3])>1 and int(p[3])<4000:       
-            p[0]="nchar ("+ str(p[3]) + ")"
-        else:
-            raise ValueError("Error: El valor de nchar debe estar entre 1 y 4000")
-    else:
-        if int(p[3])<2000000:
-            p[0]="nvarchar ("+int(p[3])+")"
-        else:
-            raise ValueError("Error: El valor maxiomo de nvarchar es de 2,000,000")
-   # p[0] = cadenas.TiposDeCadenas(p[1],p[3])
+    max = 4000
+    if p[1] == 'nvarchar':
+        max = 2000000
+    if p[3] > max:       
+        raise ValueError(f"Error: El valor de nchar debe estar entre 1 y {max}")
+    p[0] = (p[1], str(p[3]))
 
 def p_empty(p):
     '''

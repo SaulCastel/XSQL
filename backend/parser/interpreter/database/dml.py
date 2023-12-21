@@ -26,23 +26,29 @@ def insert(context:Context, database:str, tableName:str, selection:list, values:
     for i in range(len(selection)):
         if selection[i] not in columns.keys():
             raise RuntimeError(f'No se encuentra {selection[i]} en: {tableName}', position)
-        columType = columns[selection[i]]['type']
+        columnType = columns[selection[i]]['type']
         value = values[i].interpret(context)
-        if not isinstance(value, common.getType(columType)):
-            raise RuntimeError(f'Valor para {selection[i]} debe ser {columType}, no {valueType}', position)
+        if not isinstance(value, common.getType(columnType)):
+            raise RuntimeError(f'Valor para {selection[i]} debe ser {columnType}, no {type(value).__name__}', position)
         #TODO: raise error on unknown value for foreign key
         column = ET.Element(selection[i])
+        if columnType == 'nchar' or columnType == 'nvarchar':
+            length = int(columns[selection[i]]['length'])
+            if len(value) > length:
+                value = value[0:length]
         column.text = str(value)
         record.append(column)
     records.append(record)
     common.writeTreeToFile(tree, database)
 
-def getTableContext(prev:Context, columnsData:dict, record: ET.Element) -> Context:
+def getTableContext(prev:Context, columnsData:dict[str,dict], record: ET.Element) -> Context:
     cells = record.findall('./*')
     context = Context(prev)
     for cell in cells:
         columnType = columnsData[cell.tag]['type']
-        context.declare(cell.tag, operations.cast(cell.text, columnType), common.getType(columnType))
+        columnLength = columnsData[cell.tag].get('length')
+        value = operations.cast(cell.text, columnType)
+        context.declare(cell.tag, value, common.getType(columnType), columnLength)
     missingColumns = list(set(columnsData.keys()) - set(map(lambda c: c.tag, cells)))
     for column in missingColumns:
         columnType = columnsData[column]['type']
