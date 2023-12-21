@@ -9,12 +9,13 @@ class Stmt(ABC):
         pass
 
 class Declare(Stmt):
-    def __init__(self, key, t):
+    def __init__(self, key, t, length=None):
         self.key = key
         self.t = t
+        self.length = length
 
     def interpret(self, context:Context, parserState:dict):
-        context.declare(self.key, None, self.t)
+        context.declare(self.key, None, self.t, self.length)
 
 class Set(Stmt):
     def __init__(self, key, expr, position):

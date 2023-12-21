@@ -59,4 +59,9 @@ def cast(value:str, t:str) -> Any:
         return int(value)
     elif t == 'decimal':
         return float(value)
-    #TODO, add missing types
+    elif t == 'date':
+        return date.fromisoformat(value)
+    elif t == 'datetime':
+        return datetime.fromisoformat(value)
+    else:
+        return value
