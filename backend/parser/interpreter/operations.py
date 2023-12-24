@@ -1,4 +1,6 @@
 from typing import Any
+
+from parser.interpreter import symbol
 from .exceptions import RuntimeError
 from datetime import date, datetime
 
@@ -53,6 +55,18 @@ def div(left, right, position):
     lefttype = type(left).__name__
     righttype = type(right).__name__
     raise RuntimeError(f'no se puede dividir {lefttype} con {righttype}', position)
+
+def wrapInSymbol(key:str, value:Any, t:str, length:int|None=None) -> symbol.Symbol:
+    if t == 'int':
+        return symbol.Integer(key, value)
+    elif t == 'decimal':
+        return symbol.Decimal(key, value)
+    elif t == 'nchar' or t == 'nvarchar':
+        return symbol.VarChar(key, value, length)
+    elif t == 'date':
+        return symbol.Date(key, value)
+    else:
+        return symbol.DateTime(key, value)
 
 def cast(value:str, t:str) -> Any:
     if t == 'int':

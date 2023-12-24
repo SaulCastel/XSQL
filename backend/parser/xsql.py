@@ -85,7 +85,7 @@ def p_column_foreign(p):
         }
     }
     if p[2][1]:
-        columnData['attrib'].update({'length': p[2][1]})
+        columnData['attrib'].update({'length': str(p[2][1])})
     p[0] = columnData
 
 def p_column_declaration(p):
@@ -101,7 +101,7 @@ def p_column_declaration(p):
         }
     }
     if p[2][1]:
-        columnData['attrib'].update({'length': p[2][1]})
+        columnData['attrib'].update({'length': str(p[2][1])})
     p[0] = columnData
 
 def p_column_nullity(p):
@@ -173,21 +173,21 @@ def p_stmt_declare(p):
             | DECLARE '@' IDENTIFIER type
     '''
     if len(p) == 6:
-        p[0] = stmt.Declare(p[3], p[5])
+        p[0] = stmt.Declare('@'+p[3], p[5][0], p[5][1])
     else:
-        p[0] = stmt.Declare(p[3], p[4])
+        p[0] = stmt.Declare('@'+p[3], p[4][0], p[4][1])
 
 def p_stmt_assignment(p):
     '''
     stmt    : SET '@' IDENTIFIER '=' expr
     '''
     position = getPosition(p, 3)
-    p[0] = stmt.Set(p[3], p[5], position)
+    p[0] = stmt.Set('@'+p[3], p[5], position)
 
 def p_stmt_select_from(p):
     '''
-    stmt    : SELECT '*' FROM IDENTIFIER where
-            | SELECT selection_list FROM IDENTIFIER where
+    stmt    : SELECT '*' FROM identifiers where
+            | SELECT selection_list FROM identifiers where
     '''
     position = getPosition(p, 1)
     p[0] = stmt.SelectFrom(p[4], p[2], p[5], position)
@@ -313,7 +313,7 @@ def p_expr_symbol(p):
         p[0] = expr.Symbol(p[1][0], p[1][1])
     else:
         position = getPosition(p, 2)
-        p[0] = expr.Symbol(p[2], position)
+        p[0] = expr.Symbol('@'+p[2], position)
 
 def p_expr_concatena(p):
     '''
@@ -359,7 +359,7 @@ def p_type_strings(p):
         max = 2000000
     if p[3] > max:       
         raise ValueError(f"Error: El valor de nchar debe estar entre 1 y {max}")
-    p[0] = (p[1], str(p[3]))
+    p[0] = (p[1], p[3])
 
 def p_empty(p):
     '''
