@@ -1,4 +1,5 @@
-from parser.interpreter import expr
+from parser.interpreter import expr, operations
+from parser.interpreter import symbol
 from parser.interpreter.database import ddl, dml
 from parser.interpreter.context import Context
 from abc import ABC, abstractmethod
@@ -9,13 +10,14 @@ class Stmt(ABC):
         pass
 
 class Declare(Stmt):
-    def __init__(self, key, t, length=None):
+    def __init__(self, key:str, t:str, length:int|None):
         self.key = key
         self.t = t
         self.length = length
 
     def interpret(self, context:Context, parserState:dict):
-        context.declare(self.key, None, self.t, self.length)
+        newEntry = operations.wrapInSymbol(self.key, None, self.t, self.length)
+        context.declare(self.key, newEntry)
 
 class Set(Stmt):
     def __init__(self, key, expr, position):

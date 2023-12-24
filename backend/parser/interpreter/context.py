@@ -1,43 +1,22 @@
 from typing import Any, Self
 from parser.interpreter.exceptions import RuntimeError
-
-class Symbol:
-    def __init__(self, key: str, value: Any, t:Any, length:int|None=None):
-        self.key = key
-        self.value = value
-        self.t = t
-        self.length = length
-        self.truncateStr()
-
-    def update(self, value):
-        '''
-        Update Symbols's value.
-        Raises RuntimeError on mismatching types
-        '''
-        if not isinstance(value, self.t):
-            valueType = type(value).__name__
-            raise RuntimeError(f'Simbolo {self.key} de tipo {self.t} no puede ser reasignado a tipo {valueType}')
-        self.value = value
-        self.truncateStr()
-
-    def truncateStr(self):
-        if self.t == str:
-            if len(self.value) > self.length:
-                self.value = self.value[0:self.length]
+from parser.interpreter.symbol import Symbol
 
 class Context:
     def __init__(self, prev:Self | None = None) -> None:
         self.prev = prev
-        self.symbols = {}
+        self.symbols:dict[str,Symbol] = {}
 
-    def declare(self, key: str, value: Any, t:Any, length:int|None=None):
+    def declare(self, key: str, value: Symbol):
         '''Declare a new symbol in the current context/scope'''
-        self.symbols[key] = Symbol(key, value, t, length)
+        self.symbols[key] = value
 
     def set(self, key: str, value: Any, position:tuple):
         '''
         Search for a symbol on current context
-        and all previous ones, then set its value
+        and all previous ones, then set its value.
+        key must exist, or RuntimeError is raised.
+        *Use Context.declare to create a new entry instead.
         '''
         symbol = self.get(key, position)
         symbol.update(value)
