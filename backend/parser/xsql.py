@@ -4,8 +4,6 @@ from .interpreter import stmt
 from . import lexRules
 from .lexRules import tokens
 import re
-from .interpreter import Nativas 
-from .interpreter import cadenas
 from parser.interpreter import exceptions
 
 def getPosition(p, token:int):
@@ -353,28 +351,24 @@ def p_expr_symbol(p):
 
 def p_concatenar(p):
     '''
-    native    :   CONCATENAR '(' expr ',' expr ')' 
+    native    :   CONCATENAR '(' exprs ')' 
     '''
-    p[0] = Nativas.Concatenar(p[3],p[5])
+    position = getPosition(p, 1)
+    p[0] = expr.Concatenar(p[3], position)
 
 def p_substraer(p):
     '''
-    native    :   SUBSTRAER '(' expr ',' expr ',' expr ')' 
+    native    :   SUBSTRAER '(' exprs ')' 
     '''
-    p[0] = Nativas.Substaer(p[3],p[5],p[7])
+    position = getPosition(p, 1)
+    p[0] = expr.Substaer(p[3], position)
 
 
 def p_hoy(p):
     '''
     native    :   HOY '(' ')' 
     '''
-    p[0] = Nativas.hoy()
-
-def p_contar(p):
-    '''
-    native     : CONTAR '(' '*' ')' FROM IDENTIFIER where   
-    '''
-    p[0] = Nativas.contar(p[6],p[8])
+    p[0] = expr.Hoy()
 
 def p_type(p):
     '''

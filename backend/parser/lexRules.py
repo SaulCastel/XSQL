@@ -73,7 +73,7 @@ def t_INT_LITERAL(t):
 
 @TOKEN(string)
 def t_STRING_LITERAL(t):
-    t.value = t.value.strip('"')
+    t.value = t.value.strip('"\'')
     return t
 
 @TOKEN(identifier)
