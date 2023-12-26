@@ -6,6 +6,7 @@ from .lexRules import tokens
 import re
 from .interpreter import Nativas 
 from .interpreter import cadenas
+from parser.interpreter import exceptions
 
 def getPosition(p, token:int):
     '''Returns a tuple containing the line and index of a token'''
@@ -229,7 +230,7 @@ def p_where(p):
     if len(p) == 3:
         p[0] = p[2]
 
-def p_condition_chain(p):
+def p_condition_logical(p):
     '''
     condition   : condition AND condition
                 | condition OR condition
@@ -237,29 +238,50 @@ def p_condition_chain(p):
     position = getPosition(p, 2)
     p[0] = expr.Binary(p[1], p[2], p[3], position)
 
-def p_condition_base(p):
+def p_condition_relational(p):
     '''
-    condition   : symbol '<' expr
-                | symbol '>' expr
-                | symbol LESS_EQUALS expr
-                | symbol GREATER_EQUALS expr
-                | symbol '=' expr
-                | symbol NOT_EQUALS expr
+    condition   : symbol '<' condition_expr
+                | symbol '>' condition_expr
+                | symbol LESS_EQUALS condition_expr
+                | symbol GREATER_EQUALS condition_expr
+                | symbol '=' condition_expr
+                | symbol NOT_EQUALS condition_expr
     '''
     position = getPosition(p, 2)
-    symbol = expr.Symbol(p[1][0], p[1][1])
-    p[0] = expr.Binary(symbol, p[2], p[3], position)
+    p[0] = expr.Binary(p[1], p[2], p[3], position)
 
-def p_symbol(p):
+def p_condition_arithmetic(p):
     '''
-    symbol  : symbol '.' IDENTIFIER
-            | IDENTIFIER
+    condition_expr  : condition_expr '+' condition_expr
+                    | condition_expr '-' condition_expr
+                    | condition_expr '/' condition_expr
+                    | condition_expr '*' condition_expr
     '''
-    if len(p) == 2:
-        p[0] = [p[1], getPosition(p, 1)]
-    else:
-        p[0] = p[1]
-        p[0][0] += p[2] + p[3]
+    position = getPosition(p, 2)
+    p[0] = expr.Binary(p[1], p[2], p[3], position)
+
+def p_condition_unary(p):
+    '''
+    condition_expr  : '!' condition_expr
+                    | '-' condition_expr %prec UMINUS
+    '''
+    position = getPosition(p, 1)
+    p[0] = expr.Unary(p[1], p[2], position)
+
+def p_condition_group(p):
+    '''
+    condition_expr  : '(' condition_expr ')'
+    '''
+    p[0] = p[2]
+
+def p_condition_base(p):
+    '''
+    condition_expr  : literal
+                    | native
+                    | symbol
+                    | varCall
+    '''
+    p[0] = p[1]
 
 def p_expr_binary(p):
     '''
@@ -293,50 +315,64 @@ def p_expr_group(p):
     '''
     p[0] = p[2]
 
-def p_expr_literal(p):
+def p_expr_base(p):
     '''
-    expr    : INT_LITERAL
+    expr    : literal
+            | native
+            | symbol
+            | varCall
+    '''
+    p[0] = p[1]
+
+def p_literal(p):
+    '''
+    literal : INT_LITERAL
             | DECIMAL_LITERAL
-            | DATE_LITERAL
-            | DATETIME_LITERAL
             | STRING_LITERAL
     '''
     position = getPosition(p, 1)
     p[0] = expr.Literal(p[1], position)
 
-def p_expr_symbol(p):
+def p_symbol(p):
     '''
-    expr    : '@' IDENTIFIER
-            | symbol
+    symbol  : symbol '.' IDENTIFIER
+            | IDENTIFIER
     '''
     if len(p) == 2:
-        p[0] = expr.Symbol(p[1][0], p[1][1])
+        p[0] = expr.Symbol(p[1], getPosition(p, 1))
     else:
-        position = getPosition(p, 2)
-        p[0] = expr.Symbol('@'+p[2], position)
+        p[0] = p[1]
+        p[0].key += f'.{p[3]}'
 
-def p_expr_concatena(p):
+def p_expr_symbol(p):
     '''
-    expr    :   CONCATENAR '(' expr ',' expr ')' 
+    varCall : '@' IDENTIFIER
+    '''
+    position = getPosition(p, 2)
+    p[0] = expr.Symbol('@'+p[2], position)
+
+def p_concatenar(p):
+    '''
+    native    :   CONCATENAR '(' expr ',' expr ')' 
     '''
     p[0] = Nativas.Concatenar(p[3],p[5])
 
-def p_expr_substrae(p):
+def p_substraer(p):
     '''
-    expr    :   SUBSTRAER '(' expr ',' expr ',' expr ')' 
+    native    :   SUBSTRAER '(' expr ',' expr ',' expr ')' 
     '''
     p[0] = Nativas.Substaer(p[3],p[5],p[7])
 
 
-def p_expr_hoy(p):
+def p_hoy(p):
     '''
-    expr    :   HOY '(' ')' 
+    native    :   HOY '(' ')' 
     '''
     p[0] = Nativas.hoy()
 
-def p_expr_contar(p):
+def p_contar(p):
     '''
-    expr     : CONTAR '(' '*' ')' FROM IDENTIFIER where   
+    native     : CONTAR '(' '*' ')' FROM IDENTIFIER where   
     '''
     p[0] = Nativas.contar(p[6],p[8])
 
@@ -368,9 +404,8 @@ def p_empty(p):
     pass
 
 def p_error(p):
-  if not p:
-    print('Comando invalido')
-    return
-  print(f'Error de sintaxis en: <{p.value}>')
+    if not p:
+        raise exceptions.ParsingError(f'Formato de entrada incorrecto', 0)
+    raise exceptions.ParsingError(f'Error de sintaxis: <{p.value}>', p.lineno)
 
 parser = yacc.yacc()

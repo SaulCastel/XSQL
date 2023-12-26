@@ -1,6 +1,6 @@
+from parser.interpreter import exceptions
 from abc import ABC, abstractmethod
 from datetime import date, datetime
-from types import NoneType
 from typing import Any
 
 class Symbol(ABC):
@@ -21,7 +21,7 @@ class Symbol(ABC):
             return
         if not isinstance(value, self.t):
             valueType = type(value).__name__
-            raise RuntimeError(f'Simbolo {self.key} de tipo: {self.t.__name__} no puede ser asignado a tipo: {valueType}')
+            raise RuntimeError(f'Simbolo {self.key} de tipo: {self.t} no puede ser asignado a tipo: {valueType}')
 
 class VarChar(Symbol):
     def __init__(self, key:str, value:str|None, length:int):
@@ -42,53 +42,65 @@ class VarChar(Symbol):
             self.value = value
 
 class Integer(Symbol):
-    def __init__(self, key:str, value:int|None):
-        super().__init__(key, int)
+    def __init__(self, key:str, value:int|float|None):
+        super().__init__(key, (int, float))
         self.update(value)
 
     def __str__(self) -> str:
         return str(self.value)
 
-    def update(self, value:int|None) -> None:
+    def update(self, value:int|float|None) -> None:
         self.matchType(value)
         self.value = value
 
 class Decimal(Symbol):
-    def __init__(self, key:str, value:float|None):
-        super().__init__(key, float)
+    def __init__(self, key:str, value:float|int|None):
+        super().__init__(key, (float, int))
         self.update(value)
 
     def __str__(self) -> str:
         return str(self.value)
 
-    def update(self, value:float|None) -> None:
+    def update(self, value:float|int|None) -> None:
         self.matchType(value)
         self.value = value
 
 class Date(Symbol):
-    def __init__(self, key:str, value:date|None):
-        super().__init__(key, date)
+    def __init__(self, key:str, value:str|None):
+        super().__init__(key, str)
         self.update(value)
 
     def __str__(self) -> str:
         if not self.value:
             return str(self.value)
-        return self.value.strftime('%d-%m-%Y')
+        return self.value.strftime('%Y-%m-%d')
 
-    def update(self, value:date|None) -> None:
+    def update(self, value:str|None) -> None:
         self.matchType(value)
-        self.value = value
+        if value:
+            try:
+                self.value = date.fromisoformat(value)
+            except ValueError:
+                raise exceptions.RuntimeError('Fecha de formato no valido. Usar YYYY-MM-DD')
+        else:
+            self.value = value
 
 class DateTime(Symbol):
-    def __init__(self, key:str, value:datetime|None):
-        super().__init__(key, datetime)
+    def __init__(self, key:str, value:str|None):
+        super().__init__(key, str)
         self.update(value)
 
     def __str__(self) -> str:
         if not self.value:
             return str(self.value)
-        return self.value.strftime('%d-%m-%Y %H:%M:%S')
+        return self.value.strftime('%Y-%m-%d %H:%M:%S')
 
-    def update(self, value:datetime|None) -> None:
+    def update(self, value:str|None) -> None:
         self.matchType(value)
-        self.value = value
+        if value:
+            try:
+                self.value = datetime.fromisoformat(value)
+            except ValueError:
+                raise exceptions.RuntimeError('Fecha-hora de formato no valido. Usar YYYY-MM-DD HH:mm:ss')
+        else:
+            self.value = value

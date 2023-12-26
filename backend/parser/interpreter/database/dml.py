@@ -1,6 +1,6 @@
 from parser.interpreter.context import Context
 from parser.interpreter.exceptions import RuntimeError
-from parser.interpreter import expr
+from parser.interpreter import expr, operations
 from parser.interpreter.database.table import Table
 from . import common
 import xml.etree.ElementTree as ET
@@ -21,16 +21,14 @@ def insert(context:Context, database:str, tableName:str, selection:list, values:
         if selection[i] not in columns.keys():
             raise RuntimeError(f'No se encuentra {selection[i]} en: {tableName}', position)
         columnType = columns[selection[i]]['type']
+        typeLength = columns[selection[i]].get('length')
         value = values[i].interpret(context)
-        if not isinstance(value, common.getType(columnType)):
-            raise RuntimeError(f'Valor para {selection[i]} debe ser {columnType}, no {type(value).__name__}', position)
+        if typeLength:
+            typeLength = int(typeLength)
+        wrapedValue = operations.wrapInSymbol(selection[i], value, columnType, typeLength)
         #TODO: raise error on unknown value for foreign key
         column = ET.Element(selection[i])
-        if columnType == 'nchar' or columnType == 'nvarchar':
-            length = int(columns[selection[i]]['length'])
-            if len(value) > length:
-                value = value[0:length]
-        column.text = str(value)
+        column.text = str(wrapedValue)
         record.append(column)
     records.append(record)
     common.writeTreeToFile(tree, database)

@@ -45,17 +45,23 @@ class Binary(Expr):
         elif self.operator == '/':
             return operations.div(left, right, self.position)
         elif self.operator == '>':
-            return left > right
+            operands = operations.castRelationalOperands(left, self.operator, right, self.position)
+            return operands[0] > operands[1]
         elif self.operator == '<':
-            return left < right
+            operands = operations.castRelationalOperands(left, self.operator, right, self.position)
+            return operands[0] < operands[1]
         elif self.operator == '>=':
-            return left >= right
+            operands = operations.castRelationalOperands(left, self.operator, right, self.position)
+            return operands[0] >= operands[1]
         elif self.operator == '<=':
-            return left <= right
+            operands = operations.castRelationalOperands(left, self.operator, right, self.position)
+            return operands[0] <= operands[1]
         elif self.operator == '==' or self.operator == '=':
-            return left == right
+            operands = operations.castRelationalOperands(left, self.operator, right, self.position)
+            return operands[0] == operands[1]
         elif self.operator == '!=':
-            return left != right
+            operands = operations.castRelationalOperands(left, self.operator, right, self.position)
+            return operands[0] != operands[1]
         elif self.operator == '&&':
             return left and right
         elif self.operator == '||':
