@@ -28,13 +28,13 @@ function App() {
   return (
     <div className="-" >
       <header className="App-header">
-        <Navbar onNewQuery={handleNewQuery} onDataQuery={dataQuery}/>
+        <Navbar onNewQuery={handleNewQuery} onDataQuery={dataQuery}  onExecuteQuery={handleExecuteQuery}/>
       </header>
       <body >
         <div className='container-fluid'>
           <div className='row'>
             <DatabaseTree />
-            <DynamicTabs ref={dynamicTabsRef} onExecuteQuery={handleExecuteQuery} sqlContent={sqlContent} />
+            <DynamicTabs ref={dynamicTabsRef} sqlContent={sqlContent} />
           </div>
         </div>
       </body>

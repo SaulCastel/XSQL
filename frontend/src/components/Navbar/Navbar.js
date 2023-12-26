@@ -6,7 +6,7 @@ import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import Tools from "../Tools/Tools";
 
-const NavBarSql = ({ onNewQuery, onDataQuery }) => {
+const NavBarSql = ({ onNewQuery, onDataQuery, onExecuteQuery }) => {
     const [showTools, setShowTools] = useState(false);
 
     const handleToolsClick = () => {
@@ -62,7 +62,7 @@ const NavBarSql = ({ onNewQuery, onDataQuery }) => {
                 </Container>
             </Navbar>
             {showTools && (
-                <Tools onNewQuery={onNewQuery} />
+                <Tools onNewQuery={onNewQuery} onExecuteQuery={onExecuteQuery}/>
             )}
         </div>
     );
