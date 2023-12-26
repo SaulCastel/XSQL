@@ -53,6 +53,8 @@ def p_create_base(p):
     '''
     p[0] = stmt.CreateBase(p[4])
 
+
+
 def p_create_table(p):
     '''
     stmt     : CREATE TABLE IDENTIFIER '(' table_structure ')'
@@ -60,6 +62,12 @@ def p_create_table(p):
     '''
     p[0]= stmt.CreateTable(p[3], p[5])
 
+def p_truncate_table(p):
+    '''
+    stmt     : TRUNCATE TABLE IDENTIFIER 
+    '''
+    p[0] = stmt.Truncate(p[3])
+    
 def p_table_structure(p):
     '''
     table_structure : table_structure ',' column_declaration
@@ -137,6 +145,34 @@ def p_insert(p):
     '''
     position = getPosition(p, 1)
     p[0] = stmt.Insert(p[3], p[5], p[9], position)
+
+def p_Delete(p):
+    '''
+    stmt : DELETE FROM IDENTIFIER where
+    '''
+    p[0] = stmt.Delete(p[3],p[4],None) 
+
+
+def p_Update(p):
+    '''
+    stmt :  UPDATE IDENTIFIER ListNewAssignment where
+    '''
+
+    p[0]=stmt.Update(p[2],p[3],p[4])
+
+def p_List_NewAssignment(p):
+    '''
+    ListNewAssignment : ListNewAssignment ',' IDENTIFIER '=' expr
+                        | IDENTIFIER '=' expr
+
+    '''
+    if len(p) == 6:
+        p[0] = p[1]
+        p[0].append((p[3], p[5]))
+    else:
+        p[0] = []
+        p[0].append((p[1], p[3]))
+      
 
 def p_identifiers(p):
     '''
@@ -366,6 +402,54 @@ def p_empty(p):
     empty   :
     '''
     pass
+
+
+def p_ciclo_While(p):
+    '''
+    stmt : WHILE expr BEGIN stmts END 
+    '''
+    p[0] = stmt.Ciclo_while(p[2],p[4])
+
+def p_ssl_If(p):
+    '''
+    stmt : IF expr BEGIN stmts END
+    '''
+    p[0] =stmt.Ssl_IF(p[2],p[4])
+
+def p_ssl_Case(p):
+    '''
+    stmt : CASE ListWhen ELSE THEN options END finCase
+    '''
+    p[0] =stmt.Ssl_Case(p[2],p[5],p[7])
+    
+def p_List_When(p):
+    '''
+    ListWhen  :  ListWhen WHEN expr THEN options   
+              |  WHEN expr THEN options
+    '''
+    if len(p) == 6:
+        p[0] = p[1]
+        p[0].append((p[3], p[5]))
+    else:
+        p[0] = []
+        p[0].append((p[2], p[4])) 
+
+
+def p_options(p):
+    '''
+    options   : expr
+              | stmt
+    '''
+    p[0]=p[1]
+
+def p_finCase(p):
+    '''
+    finCase : IDENTIFIER FROM IDENTIFIER
+            | empty
+    '''
+    p[0]= []
+    p[0].append((p[1],p[3]))
+
 
 def p_error(p):
   if not p:

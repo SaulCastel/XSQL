@@ -1,5 +1,5 @@
 from parser.interpreter import expr
-from parser.interpreter.database import ddl, dml
+from parser.interpreter.database import ddl,dml,ciclo
 from parser.interpreter.context import Context
 from abc import ABC, abstractmethod
 
@@ -101,3 +101,54 @@ class Usar(Stmt):
     
     def interpret(self, context: Context, parserState: dict):
         parserState['database'] = self.uso
+
+class Truncate(Stmt):
+    def __init__(self,identifier) -> None:
+        self.identifier=identifier
+    def interpret(self, context: Context, parserState: dict):
+        database = parserState['database']
+        ddl.truncate(self.identifier,database)
+
+class Delete(Stmt):
+    def __init__(self,identifier,condition,position)-> None:
+        self.identifier=identifier
+        self.condition=condition
+        self.position=position
+    def interpret(self, context: Context, parserState: dict):
+        database = parserState['database']
+        dml.delete(context,database,self.identifier,self.condition,self.position)
+
+class Update(Stmt):
+    def __init__(self,identifier,list,condition):
+        self.identifier=identifier
+        self.list=list
+        self.condition= condition
+    def interpret(self, context: Context, parserState: dict):
+        database=parserState['database']
+        dml.update(context,database,self.identifier,self.condition,self.list)
+
+class Ciclo_while(Stmt):
+    def __init__(self,expresion,listStmt):
+        self.expresion=expresion
+        self.listStmt=listStmt
+    def interpret(self, context: Context, parserState: dict):
+        ciclo.ciclo_while(context,self.expresion,self.listStmt,parserState)
+
+class Ssl_IF(Stmt):
+    def __init__(self,expresion,listStmt):
+        self.expresion=expresion
+        self.listStmt=listStmt
+    def interpret(self, context: Context, parserState: dict):
+        ciclo.ssl_If(context,self.expresion,self.listStmt,parserState)
+
+class Ssl_Case(Stmt):
+    def __init__(self,ListWhen,ElseOptions,FinCase):
+        self.ListWhen=ListWhen
+        self.ElseOptions=ElseOptions
+        self.FinCase=FinCase
+    def interpret(self, context: Context, parserState: dict):
+        ciclo.ssl_Case(context,self.ListWhen,self.ElseOptions,self.FinCase,parserState)
+        
+       
+
+

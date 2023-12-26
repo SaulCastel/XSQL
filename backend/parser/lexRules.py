@@ -38,7 +38,18 @@ reserved = {
     'substraer':'SUBSTRAER',
     'hoy':'HOY',
     'contar':'CONTAR',
-    'set':'SET'
+    'set':'SET',
+    'truncate':'TRUNCATE',
+    'delete':'DELETE',
+    'update':'UPDATE',
+    'while':'WHILE',
+    'begin':'BEGIN',
+    'end':'END',
+    'if':'IF',
+    'case':'CASE',
+    'when':'WHEN',
+    'then':'THEN',
+    'else':'ELSE'
 }
 
 tokens = [

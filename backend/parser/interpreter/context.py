@@ -1,4 +1,4 @@
-from typing import Any, Self
+from typing import Any 
 from parser.interpreter.exceptions import RuntimeError
 
 class Symbol:
@@ -12,13 +12,13 @@ class Symbol:
         Update Symbols's value.
         Raises RuntimeError on mismatching types
         '''
-        if not isinstance(value, self.t):
-            valueType = type(value).__name__
-            raise RuntimeError(f'Simbolo {self.key} de tipo {self.t} no puede ser reasignado a tipo {valueType}')
+#        if not isinstance(value, self.t):
+#            valueType = type(value).__name__
+#            raise RuntimeError(f'Simbolo {self.key} de tipo {self.t} no puede ser reasignado a tipo {valueType}')
         self.value = value
 
 class Context:
-    def __init__(self, prev:Self | None = None) -> None:
+    def __init__(self, prev = None) -> None:
         self.prev = prev
         self.symbols = {}
 
