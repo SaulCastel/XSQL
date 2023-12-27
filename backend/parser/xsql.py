@@ -56,10 +56,42 @@ def p_create_base(p):
 def p_create_table(p):
     '''
     stmt     : CREATE TABLE IDENTIFIER '(' table_structure ')'
-
     '''
     p[0]= stmt.CreateTable(p[3], p[5])
+    
+# -- Functions
+def p_create_function(p):
+    '''
+    stmt    : CREATE FUNCTION IDENTIFIER '(' function_parameters ')' RETURN type AS BEGIN body_function END
+    '''
 
+def p_function_parameters(p):
+    '''
+    function_parameters : function_parameters ',' '@' IDENTIFIER type
+                        | '@' IDENTIFIER type
+    '''
+
+def p_body_function(p):
+    '''
+    body_function   : 
+    '''
+    
+# -- Procedimientos
+def p_create_procedure(p):
+    '''
+    stmt    : CREATE PROCEDURE IDENTIFIER '(' procedure_parameters ')' AS BEGIN body_procedure END 
+    '''
+    
+def p_procedure_parameters(p):
+    '''
+    procedure_parameters : procedure_parameters ',' '@' IDENTIFIER type
+                         | '@' IDENTIFIER type
+    '''
+    
+def p_body_procedure(p):
+    '''
+    '''
+    
 def p_table_structure(p):
     '''
     table_structure : table_structure ',' column_declaration
