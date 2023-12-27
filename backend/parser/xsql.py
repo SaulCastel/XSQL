@@ -13,8 +13,8 @@ def getPosition(p, token:int):
 lexer = lex.lex(reflags=re.IGNORECASE, module=lexRules)
 
 precedence = (
-    ('left', 'OR'),
-    ('left', 'AND'),
+    ('left', 'LOGICAL_OR'),
+    ('left', 'LOGICAL_AND'),
     ('left', '!'),
     ('left', 'EQUALS', 'NOT_EQUALS', '<', '>', 'LESS_EQUALS', 'GREATER_EQUALS'),
     ('left', '+', '-'),
@@ -199,8 +199,8 @@ def p_stmt_select(p):
 
 def p_selection_list(p):
     '''
-    selection_list  : selection_list ',' expr alias
-                    | expr alias
+    selection_list  : selection_list ',' return_expr alias
+                    | return_expr alias
     '''
     if len(p) == 5:
         p[0] = p[1]
@@ -208,6 +208,27 @@ def p_selection_list(p):
     else:
         p[0] = []
         p[0].append((p[1], p[2]))
+
+def p_return_expr(p):
+    '''
+    return_expr : expr
+                | contar
+                | sumar
+    '''
+    p[0] = p[1]
+
+def p_contar(p):
+    '''
+    contar  : CONTAR '(' '*' ')'
+            | CONTAR '(' symbol ')'
+    '''
+    p[0] = expr.Contar(p[3], getPosition(p, 1))
+
+def p_sumar(p):
+    '''
+    sumar   : SUMAR '(' symbol ')'
+    '''
+    p[0] = expr.Sumar(p[3], getPosition(p, 1))
 
 def p_alias(p):
     '''
@@ -230,8 +251,8 @@ def p_where(p):
 
 def p_condition_logical(p):
     '''
-    condition   : condition AND condition
-                | condition OR condition
+    condition   : condition LOGICAL_AND condition
+                | condition LOGICAL_OR condition
     '''
     position = getPosition(p, 2)
     p[0] = expr.Binary(p[1], p[2], p[3], position)
@@ -281,6 +302,14 @@ def p_condition_base(p):
     '''
     p[0] = p[1]
 
+def p_ternary_between(p):
+    '''
+    expr    : expr BETWEEN expr AND expr
+    condition   : symbol BETWEEN condition_expr AND condition_expr
+    '''
+    position = getPosition(p, 2)
+    p[0] = expr.Between(p[1], p[3], p[5], position)
+
 def p_expr_binary(p):
     '''
     expr    : expr '+' expr
@@ -293,8 +322,8 @@ def p_expr_binary(p):
             | expr GREATER_EQUALS expr
             | expr EQUALS expr
             | expr NOT_EQUALS expr
-            | expr AND expr
-            | expr OR expr
+            | expr LOGICAL_AND expr
+            | expr LOGICAL_OR expr
     '''
     position = getPosition(p, 2)
     p[0] = expr.Binary(p[1], p[2], p[3], position)

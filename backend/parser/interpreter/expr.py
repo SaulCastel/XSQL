@@ -94,6 +94,23 @@ class Symbol(Expr):
     def interpret(self, context:Context):
         return context.get(self.key, self.position).value
 
+class Between(Expr):
+    def __init__(self, symbol:Expr, min:Expr, max:Expr, position:tuple) -> None:
+        self.symbol = symbol
+        self.min = min
+        self.max = max
+        self.position = position
+
+    def __str__(self) -> str:
+        return f'{self.symbol} between {self.min} and {self.max} '
+
+    def interpret(self, context: Context) -> Any:
+        minCheck = Binary(self.symbol, '>=', self.min, self.position)
+        maxCheck = Binary(self.symbol, '<=', self.max, self.position)
+        if minCheck.interpret(context) and maxCheck.interpret(context):
+            return True
+        return False
+
 class Concatenar(Expr):
     def __init__(self, exprs:list[Expr], position:tuple) -> None:
         self.exprs = exprs
@@ -142,3 +159,37 @@ class Hoy(Expr):
         fecha_hora_formateada = fecha_hora_actual.strftime(formato_personalizado)
 
         return fecha_hora_formateada
+
+class Contar:
+    def __init__(self, selection:str|Symbol, position:tuple) -> None:
+        self.selection = selection
+        self.position = position
+
+    def __str__(self) -> str:
+        return f'contar({self.selection}) '
+
+    def interpret(self, records:list[Context]) -> Any:
+        if self.selection == '*':
+            return len(records)
+        count = 0
+        for record in records:
+            cell = record.get(self.selection.key, self.position)
+            if cell.value:
+                count += 1
+        return count
+
+class Sumar:
+    def __init__(self, selection:Symbol, position:tuple) -> None:
+        self.selection = selection
+        self.position = position
+
+    def __str__(self) -> str:
+        return f'sumar({self.selection}) '
+
+    def interpret(self, records:list[Context]) -> Any:
+        sum = 0
+        for record in records:
+            cell = record.get(self.selection.key, self.position)
+            if cell.value:
+                sum += cell.value
+        return sum
