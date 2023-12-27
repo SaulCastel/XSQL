@@ -48,12 +48,15 @@ reserved = {
     'case':'CASE',
     'when':'WHEN',
     'then':'THEN',
-    'else':'ELSE'
+    'else':'ELSE',
+    'sumar':'SUMAR',
+    'between':'BETWEEN',
+    'and':'AND',
 }
 
 tokens = [
-    'LESS_EQUALS', 'GREATER_EQUALS', 'EQUALS', 'NOT_EQUALS', 'AND', 'OR',
-    'DECIMAL_LITERAL', 'INT_LITERAL', 'STRING_LITERAL', 'IDENTIFIER',
+    'LESS_EQUALS', 'GREATER_EQUALS', 'EQUALS', 'NOT_EQUALS', 'LOGICAL_AND',
+    'LOGICAL_OR', 'DECIMAL_LITERAL', 'INT_LITERAL', 'STRING_LITERAL', 'IDENTIFIER',
 ] + list(reserved.values())
 
 literals = ['+', '-', '/', '*', '<', '>', '!', '@', '(', ')', ';', ',', '=', '.']
@@ -69,8 +72,8 @@ t_LESS_EQUALS = r'<='
 t_GREATER_EQUALS = r'>='
 t_EQUALS = r'=='
 t_NOT_EQUALS = r'!='
-t_AND = r'&&'
-t_OR = r'\|\|'
+t_LOGICAL_AND = r'&&'
+t_LOGICAL_OR = r'\|\|'
 
 @TOKEN(decimal)
 def t_DECIMAL_LITERAL(t):
@@ -84,7 +87,7 @@ def t_INT_LITERAL(t):
 
 @TOKEN(string)
 def t_STRING_LITERAL(t):
-    t.value = t.value.strip('"')
+    t.value = t.value.strip('"\'')
     return t
 
 @TOKEN(identifier)

@@ -107,3 +107,9 @@ def cast(value:str, t:str) -> Any:
         return float(value)
     else:
         return value
+
+def printSignature(name:str, params:list):
+    signature = ''
+    for param in params:
+        signature += str(param) + ', '
+    return f'{name}({signature}) '

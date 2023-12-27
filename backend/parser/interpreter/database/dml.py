@@ -84,7 +84,7 @@ def selectFrom(
     else:
         tableData = tableData[0]
     columnList = tableData.columnList
-    textRecords = []
+    records = []
     if condition:
         for record in tableData.records:
             recordContext = Context(context)
@@ -93,14 +93,19 @@ def selectFrom(
             conditionPassed = condition.interpret(recordContext)
             if not conditionPassed:
                 continue
-            textRecord = interpretReturnExprs(returnExprs, recordContext, columnList, position)
-            textRecords.append(textRecord)
+            records.append(recordContext)
     else:
         for record in tableData.records:
             recordContext = Context(context)
             for key, value in record.items():
                 recordContext.declare(key, value)
-            textRecord = interpretReturnExprs(returnExprs, recordContext, columnList, position)
+            records.append(recordContext)
+    textRecords = []
+    if type(returnExprs[0][0]) == expr.Contar or type(returnExprs[0][0]) == expr.Sumar:
+        textRecords.append([str(returnExprs[0][0].interpret(records))])
+    else:
+        for record in records:
+            textRecord = interpretReturnExprs(returnExprs, record, columnList, position)
             textRecords.append(textRecord)
     return {
         'header': getTableHeader(returnExprs, columnList),
