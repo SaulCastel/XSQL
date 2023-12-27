@@ -139,11 +139,12 @@ class Ciclo_while(Stmt):
         ciclo.ciclo_while(context,self.expresion,self.listStmt,parserState)
 
 class Ssl_IF(Stmt):
-    def __init__(self,expresion,listStmt):
+    def __init__(self,expresion,listStmt,listStmtElse):
         self.expresion=expresion
         self.listStmt=listStmt
+        self.listStmtElse=listStmtElse
     def interpret(self, context: Context, parserState: dict):
-        ciclo.ssl_If(context,self.expresion,self.listStmt,parserState)
+        ciclo.ssl_If(context,self.expresion,self.listStmt,self.listStmtElse,parserState)
 
 class Ssl_Case(Stmt):
     def __init__(self,ListWhen,ElseOptions,FinCase):

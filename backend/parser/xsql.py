@@ -448,9 +448,20 @@ def p_ciclo_While(p):
 
 def p_ssl_If(p):
     '''
-    stmt : IF expr BEGIN stmts END
+    stmt : IF expr BEGIN stmts END FinIf
     '''
-    p[0] =stmt.Ssl_IF(p[2],p[4])
+    p[0] =stmt.Ssl_IF(p[2],p[4],p[6])
+
+def p_Fin_If(p):
+    '''
+    FinIf : ELSE BEGIN stmts END 
+         | empty
+    '''
+
+    if len(p) == 5:
+        p[0] = p[3]
+    else:
+        p[0] =''
 
 def p_ssl_Case(p):
     '''

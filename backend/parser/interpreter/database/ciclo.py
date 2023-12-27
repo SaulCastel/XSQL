@@ -11,12 +11,16 @@ def ciclo_while(context:Context,expresion:expr.Binary,intrrucciones: stmt, parse
         for stmt in intrrucciones:
                 stmt.interpret(WhileContext,parserState)
 
-def ssl_If(context:Context,expresion:expr.Binary,insrucciones:stmt,parserState:dict):
+def ssl_If(context:Context,expresion:expr.Binary,insrucciones:stmt,instruccionesElse:stmt,parserState:dict):
      IfContext = Context(context)
 
      if expresion.interpret(context):
           for stmt in insrucciones:
                stmt.interpret(IfContext,parserState)
+     else:
+          if instruccionesElse != None:
+               for stmt in instruccionesElse:
+                    stmt.interpret(IfContext,parserState)
 
 def ssl_Case(context:Context,ListWhen:list ,ElseOptions:expr or stmt, FinCase:str, parserState:dict):
 
