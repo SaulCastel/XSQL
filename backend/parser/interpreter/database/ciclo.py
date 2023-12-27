@@ -17,10 +17,14 @@ def ssl_If(context:Context,expresion:expr.Binary,insrucciones:stmt,parserState:d
      if expresion.interpret(context):
           for stmt in insrucciones:
                stmt.interpret(IfContext,parserState)
-def ssl_Case(context:Context,ListWhen:list ,ElseOptions:expr or stmt, FinCase:str, parserState:dict):
-     print("Lista when",ListWhen)
-     print("Option Else",ElseOptions)
-     print("finCase",FinCase)
 
+def ssl_Case(context:Context,ListWhen:list ,ElseOptions:expr or stmt, FinCase:str, parserState:dict):
+
+     if FinCase != None:
+          for Element in ListWhen:
+               if Element[0].interpret(context):
+                    Element[1].interpret(context,parserState)     
+     else:
+          print ("FinCase",FinCase)
 
           

@@ -1,5 +1,6 @@
 from parser.interpreter import operations
-from typing import Self
+from typing_extensions import Self
+#from typing import Self
 import xml.etree.ElementTree as ET
 
 class Table:

@@ -460,8 +460,8 @@ def p_ssl_Case(p):
     
 def p_List_When(p):
     '''
-    ListWhen  :  ListWhen WHEN expr THEN options   
-              |  WHEN expr THEN options
+    ListWhen  :  ListWhen WHEN optionsWhen THEN options   
+              |  WHEN optionsWhen THEN options
     '''
     if len(p) == 6:
         p[0] = p[1]
@@ -470,22 +470,35 @@ def p_List_When(p):
         p[0] = []
         p[0].append((p[2], p[4])) 
 
+def p_options_When(p):
+    '''
+    optionsWhen : expr
+                | condition
+    '''
+    if len(p)==2:
+        p[0]=p[1]
+    else:
+        p[0]=p[1]
 
 def p_options(p):
     '''
     options   : expr
-              | stmt
+              | stmt ';'
     '''
-    p[0]=p[1]
+    if len(p)==2:
+        p[0]=p[1]
+    else:
+        p[0]=p[1]
 
 def p_finCase(p):
     '''
     finCase : IDENTIFIER FROM IDENTIFIER
             | empty
     '''
-    p[0]= []
-    p[0].append((p[1],p[3]))
-
+    if len(p) == 4:
+        p[0] = ((p[1],p[3]))
+    else:
+        p[0] = ''
 
 def p_error(p):
     if not p:
