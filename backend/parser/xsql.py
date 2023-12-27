@@ -6,6 +6,7 @@ from .lexRules import tokens
 import re
 from .interpreter import Nativas 
 from .interpreter import cadenas
+from parser.interpreter import exceptions
 
 def getPosition(p, token:int):
     '''Returns a tuple containing the line and index of a token'''
@@ -53,44 +54,19 @@ def p_create_base(p):
     '''
     p[0] = stmt.CreateBase(p[4])
 
+
+
 def p_create_table(p):
     '''
     stmt     : CREATE TABLE IDENTIFIER '(' table_structure ')'
     '''
     p[0]= stmt.CreateTable(p[3], p[5])
-    
-# -- Functions
-def p_create_function(p):
-    '''
-    stmt    : CREATE FUNCTION IDENTIFIER '(' function_parameters ')' RETURN type AS BEGIN body_function END
-    '''
 
-def p_function_parameters(p):
+def p_truncate_table(p):
     '''
-    function_parameters : function_parameters ',' '@' IDENTIFIER type
-                        | '@' IDENTIFIER type
+    stmt     : TRUNCATE TABLE IDENTIFIER 
     '''
-
-def p_body_function(p):
-    '''
-    body_function   : 
-    '''
-    
-# -- Procedimientos
-def p_create_procedure(p):
-    '''
-    stmt    : CREATE PROCEDURE IDENTIFIER '(' procedure_parameters ')' AS BEGIN body_procedure END 
-    '''
-    
-def p_procedure_parameters(p):
-    '''
-    procedure_parameters : procedure_parameters ',' '@' IDENTIFIER type
-                         | '@' IDENTIFIER type
-    '''
-    
-def p_body_procedure(p):
-    '''
-    '''
+    p[0] = stmt.Truncate(p[3])
     
 def p_table_structure(p):
     '''
@@ -117,7 +93,7 @@ def p_column_foreign(p):
         }
     }
     if p[2][1]:
-        columnData['attrib'].update({'length': p[2][1]})
+        columnData['attrib'].update({'length': str(p[2][1])})
     p[0] = columnData
 
 def p_column_declaration(p):
@@ -133,7 +109,7 @@ def p_column_declaration(p):
         }
     }
     if p[2][1]:
-        columnData['attrib'].update({'length': p[2][1]})
+        columnData['attrib'].update({'length': str(p[2][1])})
     p[0] = columnData
 
 def p_column_nullity(p):
@@ -176,6 +152,34 @@ def p_insert(p):
     position = getPosition(p, 1)
     p[0] = stmt.Insert(p[3], p[5], p[9], position)
 
+def p_Delete(p):
+    '''
+    stmt : DELETE FROM IDENTIFIER where
+    '''
+    p[0] = stmt.Delete(p[3],p[4],None) 
+
+
+def p_Update(p):
+    '''
+    stmt :  UPDATE IDENTIFIER ListNewAssignment where
+    '''
+
+    p[0]=stmt.Update(p[2],p[3],p[4])
+
+def p_List_NewAssignment(p):
+    '''
+    ListNewAssignment : ListNewAssignment ',' IDENTIFIER '=' expr
+                        | IDENTIFIER '=' expr
+
+    '''
+    if len(p) == 6:
+        p[0] = p[1]
+        p[0].append((p[3], p[5]))
+    else:
+        p[0] = []
+        p[0].append((p[1], p[3]))
+      
+
 def p_identifiers(p):
     '''
     identifiers : identifiers ',' IDENTIFIER
@@ -205,21 +209,21 @@ def p_stmt_declare(p):
             | DECLARE '@' IDENTIFIER type
     '''
     if len(p) == 6:
-        p[0] = stmt.Declare(p[3], p[5])
+        p[0] = stmt.Declare('@'+p[3], p[5][0], p[5][1])
     else:
-        p[0] = stmt.Declare(p[3], p[4])
+        p[0] = stmt.Declare('@'+p[3], p[4][0], p[4][1])
 
 def p_stmt_assignment(p):
     '''
     stmt    : SET '@' IDENTIFIER '=' expr
     '''
     position = getPosition(p, 3)
-    p[0] = stmt.Set(p[3], p[5], position)
+    p[0] = stmt.Set('@'+p[3], p[5], position)
 
 def p_stmt_select_from(p):
     '''
-    stmt    : SELECT '*' FROM IDENTIFIER where
-            | SELECT selection_list FROM IDENTIFIER where
+    stmt    : SELECT '*' FROM identifiers where
+            | SELECT selection_list FROM identifiers where
     '''
     position = getPosition(p, 1)
     p[0] = stmt.SelectFrom(p[4], p[2], p[5], position)
@@ -261,7 +265,7 @@ def p_where(p):
     if len(p) == 3:
         p[0] = p[2]
 
-def p_condition_chain(p):
+def p_condition_logical(p):
     '''
     condition   : condition AND condition
                 | condition OR condition
@@ -269,29 +273,50 @@ def p_condition_chain(p):
     position = getPosition(p, 2)
     p[0] = expr.Binary(p[1], p[2], p[3], position)
 
-def p_condition_base(p):
+def p_condition_relational(p):
     '''
-    condition   : symbol '<' expr
-                | symbol '>' expr
-                | symbol LESS_EQUALS expr
-                | symbol GREATER_EQUALS expr
-                | symbol '=' expr
-                | symbol NOT_EQUALS expr
+    condition   : symbol '<' condition_expr
+                | symbol '>' condition_expr
+                | symbol LESS_EQUALS condition_expr
+                | symbol GREATER_EQUALS condition_expr
+                | symbol '=' condition_expr
+                | symbol NOT_EQUALS condition_expr
     '''
     position = getPosition(p, 2)
-    symbol = expr.Symbol(p[1][0], p[1][1])
-    p[0] = expr.Binary(symbol, p[2], p[3], position)
+    p[0] = expr.Binary(p[1], p[2], p[3], position)
 
-def p_symbol(p):
+def p_condition_arithmetic(p):
     '''
-    symbol  : symbol '.' IDENTIFIER
-            | IDENTIFIER
+    condition_expr  : condition_expr '+' condition_expr
+                    | condition_expr '-' condition_expr
+                    | condition_expr '/' condition_expr
+                    | condition_expr '*' condition_expr
     '''
-    if len(p) == 2:
-        p[0] = [p[1], getPosition(p, 1)]
-    else:
-        p[0] = p[1]
-        p[0][0] += p[2] + p[3]
+    position = getPosition(p, 2)
+    p[0] = expr.Binary(p[1], p[2], p[3], position)
+
+def p_condition_unary(p):
+    '''
+    condition_expr  : '!' condition_expr
+                    | '-' condition_expr %prec UMINUS
+    '''
+    position = getPosition(p, 1)
+    p[0] = expr.Unary(p[1], p[2], position)
+
+def p_condition_group(p):
+    '''
+    condition_expr  : '(' condition_expr ')'
+    '''
+    p[0] = p[2]
+
+def p_condition_base(p):
+    '''
+    condition_expr  : literal
+                    | native
+                    | symbol
+                    | varCall
+    '''
+    p[0] = p[1]
 
 def p_expr_binary(p):
     '''
@@ -325,50 +350,64 @@ def p_expr_group(p):
     '''
     p[0] = p[2]
 
-def p_expr_literal(p):
+def p_expr_base(p):
     '''
-    expr    : INT_LITERAL
+    expr    : literal
+            | native
+            | symbol
+            | varCall
+    '''
+    p[0] = p[1]
+
+def p_literal(p):
+    '''
+    literal : INT_LITERAL
             | DECIMAL_LITERAL
-            | DATE_LITERAL
-            | DATETIME_LITERAL
             | STRING_LITERAL
     '''
     position = getPosition(p, 1)
     p[0] = expr.Literal(p[1], position)
 
-def p_expr_symbol(p):
+def p_symbol(p):
     '''
-    expr    : '@' IDENTIFIER
-            | symbol
+    symbol  : symbol '.' IDENTIFIER
+            | IDENTIFIER
     '''
     if len(p) == 2:
-        p[0] = expr.Symbol(p[1][0], p[1][1])
+        p[0] = expr.Symbol(p[1], getPosition(p, 1))
     else:
-        position = getPosition(p, 2)
-        p[0] = expr.Symbol(p[2], position)
+        p[0] = p[1]
+        p[0].key += f'.{p[3]}'
 
-def p_expr_concatena(p):
+def p_expr_symbol(p):
     '''
-    expr    :   CONCATENAR '(' expr ',' expr ')' 
+    varCall : '@' IDENTIFIER
+    '''
+    position = getPosition(p, 2)
+    p[0] = expr.Symbol('@'+p[2], position)
+
+def p_concatenar(p):
+    '''
+    native    :   CONCATENAR '(' expr ',' expr ')' 
     '''
     p[0] = Nativas.Concatenar(p[3],p[5])
 
-def p_expr_substrae(p):
+def p_substraer(p):
     '''
-    expr    :   SUBSTRAER '(' expr ',' expr ',' expr ')' 
+    native    :   SUBSTRAER '(' expr ',' expr ',' expr ')' 
     '''
     p[0] = Nativas.Substaer(p[3],p[5],p[7])
 
 
-def p_expr_hoy(p):
+def p_hoy(p):
     '''
-    expr    :   HOY '(' ')' 
+    native    :   HOY '(' ')' 
     '''
     p[0] = Nativas.hoy()
 
-def p_expr_contar(p):
+def p_contar(p):
     '''
-    expr     : CONTAR '(' '*' ')' FROM IDENTIFIER where   
+    native     : CONTAR '(' '*' ')' FROM IDENTIFIER where   
     '''
     p[0] = Nativas.contar(p[6],p[8])
 
@@ -391,7 +430,7 @@ def p_type_strings(p):
         max = 2000000
     if p[3] > max:       
         raise ValueError(f"Error: El valor de nchar debe estar entre 1 y {max}")
-    p[0] = (p[1], str(p[3]))
+    p[0] = (p[1], p[3])
 
 def p_empty(p):
     '''
@@ -399,10 +438,57 @@ def p_empty(p):
     '''
     pass
 
+
+def p_ciclo_While(p):
+    '''
+    stmt : WHILE expr BEGIN stmts END 
+    '''
+    p[0] = stmt.Ciclo_while(p[2],p[4])
+
+def p_ssl_If(p):
+    '''
+    stmt : IF expr BEGIN stmts END
+    '''
+    p[0] =stmt.Ssl_IF(p[2],p[4])
+
+def p_ssl_Case(p):
+    '''
+    stmt : CASE ListWhen ELSE THEN options END finCase
+    '''
+    p[0] =stmt.Ssl_Case(p[2],p[5],p[7])
+    
+def p_List_When(p):
+    '''
+    ListWhen  :  ListWhen WHEN expr THEN options   
+              |  WHEN expr THEN options
+    '''
+    if len(p) == 6:
+        p[0] = p[1]
+        p[0].append((p[3], p[5]))
+    else:
+        p[0] = []
+        p[0].append((p[2], p[4])) 
+
+
+def p_options(p):
+    '''
+    options   : expr
+              | stmt
+    '''
+    p[0]=p[1]
+
+def p_finCase(p):
+    '''
+    finCase : IDENTIFIER FROM IDENTIFIER
+            | empty
+    '''
+    p[0]= []
+    p[0].append((p[1],p[3]))
+
+
 def p_error(p):
-  if not p:
-    print('Comando invalido')
-    return
-  print(f'Error de sintaxis en: <{p.value}>')
+    if not p:
+        raise exceptions.ParsingError(f'Formato de entrada incorrecto', 0)
+    raise exceptions.ParsingError(f'Error de sintaxis: <{p.value}>', p.lineno)
 
 parser = yacc.yacc()

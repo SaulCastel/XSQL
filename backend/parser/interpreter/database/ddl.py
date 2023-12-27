@@ -47,3 +47,19 @@ def alterDrop(tableName:str, column:str, database:str):
         if cell != None:
             element.remove(cell)
     common.writeTreeToFile(tree, database)
+
+def truncate(tableName:str, database:str):
+    tree = common.getDatabaseElementTree(database)
+    raiz = tree.getroot()
+
+    table = raiz.find(tableName)
+    if not table:
+        raise RuntimeError(f'No se encuentra {tableName} en {database}')
+    
+    filas = table.find("records")
+    
+    
+    filas.clear()
+        
+    common.writeTreeToFile(tree, database)
+    
