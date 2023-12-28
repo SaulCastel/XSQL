@@ -122,10 +122,10 @@ class Concatenar(Expr):
     def interpret(self, context:Context):
         if len(self.exprs) < 2:
             raise exceptions.RuntimeError('no. de argumentos invalido', self.position)
-        concat = self.exprs[0]
-        for i in range(1, len(self.exprs)):
-            concat = Binary(concat, '+', self.exprs[i], self.position)
-        return concat.interpret(context)
+        concat = ''
+        for e in self.exprs:
+            concat += str(e.interpret(context))
+        return concat
 
 class Substaer(Expr):
     def __init__(self, exprs:list[Expr], position:tuple) -> None:
