@@ -65,7 +65,7 @@ def p_truncate_table(p):
     '''
     stmt     : TRUNCATE TABLE IDENTIFIER 
     '''
-    p[0] = stmt.Truncate(p[3])
+    p[0] = stmt.Truncate(p[3], getPosition(p, 1))
     
 def p_table_structure(p):
     '''
@@ -78,26 +78,9 @@ def p_table_structure(p):
         p[0] = p[1]
         p[0].append(p[3])
 
-def p_column_foreign(p):
-    '''
-    column_declaration  : IDENTIFIER type nullity REFERENCE IDENTIFIER '(' IDENTIFIER ')'
-    '''
-    columnData = {
-        'name': p[1],
-        'attrib': {
-            'type': p[2][0],
-            'null': p[3],
-            'key': 'foreign',
-            'reference': f'{p[5]}.{p[7]}'
-        }
-    }
-    if p[2][1]:
-        columnData['attrib'].update({'length': str(p[2][1])})
-    p[0] = columnData
-
 def p_column_declaration(p):
     '''
-    column_declaration   : IDENTIFIER type nullity key_type
+    column_declaration   : IDENTIFIER type nullity key_type foreign_key
     '''
     columnData = {
         'name': p[1],
@@ -109,6 +92,8 @@ def p_column_declaration(p):
     }
     if p[2][1]:
         columnData['attrib'].update({'length': str(p[2][1])})
+    if p[5]:
+        columnData['attrib'].update({'reference':f'{p[5][0]}.{p[5][1]}'})
     p[0] = columnData
 
 def p_column_nullity(p):
@@ -132,17 +117,31 @@ def p_column_key_type(p):
     else:
         p[0] = ''
 
+def p_foreign_key(p):
+    '''
+    foreign_key : REFERENCE IDENTIFIER '(' IDENTIFIER ')'
+                | empty
+    '''
+    if len(p) != 2:
+        p[0] = (p[2], p[4])
+
 def p_alter_add(p):
    '''
-   stmt : ALTER TABLE IDENTIFIER ADD column_declaration
+   stmt : ALTER TABLE IDENTIFIER ADD COLUMN column_declaration
    '''
-   p[0] = stmt.AlterADD(p[3], p[5])
+   p[0] = stmt.AlterADD(p[3], p[6], getPosition(p, 1))
 
 def p_alter_drop(p):
    '''
-   stmt : ALTER TABLE IDENTIFIER DROP IDENTIFIER 
+   stmt : ALTER TABLE IDENTIFIER DROP COLUMN IDENTIFIER 
    '''
-   p[0] = stmt.AlterDROP(p[3], p[5])
+   p[0] = stmt.AlterDROP(p[3], p[6], getPosition(p, 1))
+
+def p_drop_table(p):
+    '''
+    stmt    : DROP TABLE IDENTIFIER
+    '''
+    p[0] = stmt.DropTable(p[3], getPosition(p, 1))
 
 def p_insert(p):
     '''

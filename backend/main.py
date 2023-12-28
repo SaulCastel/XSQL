@@ -25,7 +25,8 @@ def interpret(body: Annotated[dict, Body()]):
         'result': [],
     }
     try:
-        stmts = xsql.parser.parse(body['input'])
+        xsql.lexer.input(body['input'])
+        stmts = xsql.parser.parse()
         try:
             globalContext = Context()
             for stmt in stmts:

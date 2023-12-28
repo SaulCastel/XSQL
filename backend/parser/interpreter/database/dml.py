@@ -112,7 +112,6 @@ def selectFrom(
         'records': textRecords
     }
 
-
 def delete(context:Context, database:str, tableName:str,
     condition:expr.Binary|None, position:tuple):
     tree = common.getDatabaseElementTree(database)
@@ -133,7 +132,6 @@ def delete(context:Context, database:str, tableName:str,
     else:
         xmlRecords.clear()
     common.writeTreeToFile(tree, database)
-
 
 def update(context:Context,database:str,tableName:str,condition:expr.Binary|None, lista :list ):
     tree = common.getDatabaseElementTree(database)
@@ -160,5 +158,3 @@ def update(context:Context,database:str,tableName:str,condition:expr.Binary|None
                         column.text = str(Asignacion[1].interpret(context))
                         record.append(column)
     common.writeTreeToFile(tree, database)  
-    #for Asignacion in lista:
-    #    print("Clave: ", Asignacion[0] ,"  Valor: ", Asignacion[1])

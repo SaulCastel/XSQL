@@ -2,25 +2,6 @@ from typing import Any
 from parser.interpreter.exceptions import RuntimeError
 from parser.interpreter.symbol import Symbol
 
-class Symbol:
-    def __init__(self, key: str, value: Any, t:Any):
-        self.key = key
-        self.value = value
-        self.t = t
-
-    def update(self, value):
-        '''
-        Update Symbols's value.
-        Raises RuntimeError on mismatching types
-        '''
-#        if not isinstance(value, self.t):
-#            valueType = type(value).__name__
-#            raise RuntimeError(f'Simbolo {self.key} de tipo {self.t} no puede ser reasignado a tipo {valueType}')
-        self.value = value
-
-
-
-
 class Context:
     def __init__(self, prev = None) -> None:
         self.prev = prev

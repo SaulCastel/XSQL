@@ -1,7 +1,5 @@
-
 from parser.interpreter.database import ddl,dml,ciclo
 from parser.interpreter import expr, operations
-from parser.interpreter import symbol
 from parser.interpreter.context import Context
 from abc import ABC, abstractmethod
 
@@ -70,23 +68,34 @@ class CreateTable(Stmt):
         database = parserState['database']
         ddl.createTable(self.NameTable, self.column, database)
 
-class AlterADD(Stmt):
-    def __init__(self,NameTable,column) -> None:
-       self.column=column
-       self.NameTable =NameTable
+class DropTable(Stmt):
+    def __init__(self, tableName:str, position:tuple) -> None:
+        self.tableName = tableName
+        self.position = position
 
     def interpret(self, context: Context, parserState: dict):
         database = parserState['database']
-        ddl.alterAdd(self.NameTable, self.column, database)
+        ddl.dropTable(database, self.tableName, self.position)
+
+class AlterADD(Stmt):
+    def __init__(self,NameTable,column, position) -> None:
+        self.column=column
+        self.NameTable =NameTable
+        self.position = position
+
+    def interpret(self, context: Context, parserState: dict):
+        database = parserState['database']
+        ddl.alterAdd(self.NameTable, self.column, database, self.position)
 
 class AlterDROP(Stmt):
-    def __init__(self,NameTable,TextColumn) -> None:
-       self.TextColumn=TextColumn
-       self.NameTable =NameTable
+    def __init__(self,NameTable,TextColumn, position) -> None:
+        self.TextColumn=TextColumn
+        self.NameTable =NameTable
+        self.position = position
 
     def interpret(self, context: Context, parserState: dict):
         database = parserState['database']
-        ddl.alterDrop(self.NameTable, self.TextColumn, database)
+        ddl.alterDrop(self.NameTable, self.TextColumn, database, self.position)
 
 class Insert(Stmt):
     def __init__(self, table, selection, values, position):
@@ -107,11 +116,13 @@ class Usar(Stmt):
         parserState['database'] = self.uso
 
 class Truncate(Stmt):
-    def __init__(self,identifier) -> None:
+    def __init__(self,identifier, position) -> None:
         self.identifier=identifier
+        self.position = position
+
     def interpret(self, context: Context, parserState: dict):
         database = parserState['database']
-        ddl.truncate(self.identifier,database)
+        ddl.truncate(self.identifier,database, self.position)
 
 class Delete(Stmt):
     def __init__(self,identifier,condition,position)-> None:
@@ -153,7 +164,3 @@ class Ssl_Case(Stmt):
         self.FinCase=FinCase
     def interpret(self, context: Context, parserState: dict):
         ciclo.ssl_Case(context,self.ListWhen,self.ElseOptions,self.FinCase,parserState)
-        
-       
-
-

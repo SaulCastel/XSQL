@@ -18,10 +18,12 @@ class Table:
                 columnType = columnsData[cell.tag]['type']
                 typeLength = columnsData[cell.tag].get('length')
                 value = operations.cast(cell.text, columnType)
-                name = f'{self.name}.{cell.tag}'
                 if typeLength:
                     typeLength = int(typeLength)
-                data[name] = operations.wrapInSymbol(name, value, columnType, typeLength)
+                name = f'{self.name}.{cell.tag}'
+                symbol = operations.wrapInSymbol(name, value, columnType, typeLength)
+                data[name] = symbol
+                data[cell.tag] = symbol
             missingColumns = list(set(columnsData.keys()) - set(map(lambda c: c.tag, cells)))
             for column in missingColumns:
                 columnType = columnsData[column]['type']
@@ -29,7 +31,9 @@ class Table:
                 if typeLength:
                     typeLength = int(typeLength)
                 name = f'{self.name}.{column}'
-                data[name] = operations.wrapInSymbol(name, None, columnType, typeLength)
+                symbol = operations.wrapInSymbol(name, None, columnType, typeLength)
+                data[name] = symbol
+                data[column] = symbol
             castedRecords.append(data)
         return castedRecords
         

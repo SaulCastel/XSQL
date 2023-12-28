@@ -151,6 +151,7 @@ class Lexer:
     # ------------------------------------------------------------
     def input(self, s):
         self.lexdata = s
+        self.lineno = 1
         self.lexpos = 0
         self.lexlen = len(s)
 

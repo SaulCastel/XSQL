@@ -52,6 +52,7 @@ reserved = {
     'sumar':'SUMAR',
     'between':'BETWEEN',
     'and':'AND',
+    'column':'COLUMN',
 }
 
 tokens = [
@@ -103,5 +104,5 @@ def t_ignore_newline(t):
 t_ignore = ' \t'
 
 def t_error(t):
-  print(f'Error lexico en: <{t.value}>')
-  t.lexer.skip(1)
+    print(f'Error lexico en: <{t.value}>')
+    t.lexer.skip(1)

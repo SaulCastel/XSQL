@@ -133,7 +133,7 @@ class Substaer(Expr):
         self.position = position
     
     def __str__(self) -> str:
-        return operations.printSignature('concatenar', self.exprs)
+        return operations.printSignature('substraer', self.exprs)
 
     def interpret(self, context:Context):
         if len(self.exprs) != 3:
