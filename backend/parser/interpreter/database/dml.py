@@ -5,24 +5,38 @@ from parser.interpreter.database.table import Table
 from . import common
 import xml.etree.ElementTree as ET
 
-def insert(context:Context, database:str, tableName:str, selection:list, values:list, position:tuple):
+def insert(
+    context:Context, database:str, tableName:str,
+    selection:list[str], values:list[expr.Expr],
+    position:tuple
+):
     tree = common.getDatabaseElementTree(database)
     table = tree.find(tableName)
     if table == None:
         raise RuntimeError(f'No se encuentra {tableName} en: {database}', position)
+    columns = common.getTableColumns(table)
+    for column in selection:
+        if column in columns.keys(): continue
+        raise RuntimeError(f'No se encuentra {column} en: {tableName}', position)
     required = map(lambda e: e.tag, table.findall("columns/*[@null='no']"))
     for column in required:
-        if column not in selection:
-            raise RuntimeError(f'Columna: {column} es obligatoria', position)
-    columns = common.getTableColumns(table)
+        if column in selection: continue
+        raise RuntimeError(f'Columna: {column} es obligatoria', position)
+    primaryKey = tuple(map(lambda e: e.tag, table.findall('columns/*[@key="primary"]')))
+    rowData = {}
+    for i in range(len(selection)):
+        rowData[selection[i]] = values[i].interpret(context)
+    newUniqueValue = list(map(lambda key: str(rowData[key]), primaryKey))
     records = table.find('records')
+    for record in records.iter('record'):
+        pKey = list(map(lambda key: record.find(key).text, primaryKey))
+        if newUniqueValue != pKey: continue
+        raise RuntimeError(f'Valor para llave primaria {primaryKey} repetido', position)
     record = ET.Element('record')
     for i in range(len(selection)):
-        if selection[i] not in columns.keys():
-            raise RuntimeError(f'No se encuentra {selection[i]} en: {tableName}', position)
         columnType = columns[selection[i]]['type']
         typeLength = columns[selection[i]].get('length')
-        value = values[i].interpret(context)
+        value = rowData.get(selection[i])
         if typeLength:
             typeLength = int(typeLength)
         wrapedValue = operations.wrapInSymbol(selection[i], value, columnType, typeLength)
