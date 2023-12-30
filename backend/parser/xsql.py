@@ -536,6 +536,13 @@ def p_finCase(p):
 def p_error(p):
     if not p:
         raise exceptions.ParsingError(f'Formato de entrada incorrecto', 0)
-    raise exceptions.ParsingError(f'Error de sintaxis: <{p.value}>', p.lineno)
+    error = {
+        'type':'sintactico',
+        'error':p.value,
+        'line':p.lineno,
+        'col':p.lexpos
+    }
+    parser.errors.append(error)
+    parser.errok()
 
 parser = yacc.yacc()

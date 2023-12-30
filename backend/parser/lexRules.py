@@ -104,5 +104,11 @@ def t_ignore_newline(t):
 t_ignore = ' \t'
 
 def t_error(t):
-    print(f'Error lexico en: <{t.value}>')
+    error = {
+        'type':'lexico',
+        'error':t.value[0],
+        'line':t.lexer.lineno,
+        'col':t.lexer.lexpos
+    }
+    t.lexer.errors.append(error)
     t.lexer.skip(1)
