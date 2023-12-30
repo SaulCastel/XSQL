@@ -39,5 +39,32 @@ def interpret(body: Annotated[dict, Body()]):
         'result': parserState['result'],
     }
 
+@app.post('/GenerarAST')
+def GenerarAST(body: Annotated[dict, Body()]):
+    MAnejoAST = {
+        'output': [],
+        'result': [],
+    }
+    try:
+        stmts = xsql.parser.parse(body['input'])
+        try:
+            dot = 'graph AST {\n'
+            dot += 'ordering = out\n'
+            dot += stmts[0].GenerarAST()
+            dot += '"stmt0"[label = "stmt"]\n'
+            dot += f'"stmt0" -- "instruc{stmts[0].contador}"\n'
+
+            dot += '}'
+            print (dot)
+            MAnejoAST['result'].append(str(dot))
+        except exceptions.RuntimeError as error:
+            MAnejoAST['output'].append(str(error))
+    except exceptions.ParsingError as error:
+        MAnejoAST['output'].append(str(error))
+    return {
+        'output': MAnejoAST['output'],
+        'result': MAnejoAST['result'],
+    }
+
 if __name__ == '__main__':
     uvicorn.run(app, host='0.0.0.0', port=8000)
