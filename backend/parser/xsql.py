@@ -484,7 +484,79 @@ def p_finCase(p):
     '''
     p[0]= []
     p[0].append((p[1],p[3]))
+    
+# -- Procedimientos
+def p_create_procedure(p):
+    '''
+    stmt    : CREATE PROCEDURE IDENTIFIER '(' parameters ')' AS BEGIN stmts END 
+    '''
+    p[0] = stmt.Create_procedure(p[3],p[5],p[9])
+    
+def p_parameters(p):
+    '''
+    parameters : parameters ',' '@' IDENTIFIER type
+                         | '@' IDENTIFIER type
+    '''
+    if len(p) == 6:
+        p[0] = p[1]
+        p[0].append(['@'+p[4], p[5]])
+    else:
+        p[0] = []
+        p[0].append(['@'+p[2], p[3]])
+        
+# -- Llamada procedimientos
+def p_exec_procedure(p):
+    '''
+    stmt    : EXECT IDENTIFIER call_params
+    '''
 
+def p_call_params(p):
+    '''
+    call_params     : call
+                    | declare_params
+    '''
+    
+def p_call(p):
+    '''
+    call    : call ',' expr
+            | expr  
+    '''
+    
+def p_declare_params(p):
+    '''
+    declare_params  : declare_params ',' '@' IDENTIFIER '=' expr
+                    | '@' IDENTIFIER '=' expr
+    '''
+# -- Functions
+def p_create_function(p):
+    '''
+    stmt    : CREATE FUNCTION IDENTIFIER '(' parameters ')' RETURN type AS BEGIN block_stmts END
+    '''
+    p[0] = stmt.Create_function(p[3],p[5],p[8],p[11])
+    
+def p_block_stmts(p):
+    '''
+    block_stmts  : block_stmts stmts
+                 | stmts
+                 | RETURN expr
+    '''    
+    if len(p) == 4:
+        p[0] = p[1]
+        p[0].append(p[2])
+    else:
+        p[0] = []
+        p[0].append(p[1])
+    
+def p_extend_stmt(p):
+    '''
+    extend_stmt  : IF, ELSE, DECLARE, SET, INSERT, RETURN, CASE
+    '''    
+    p[0] = p[1]
+    
+def p_call_function(p):
+    '''
+    expr   : IDENTIFIER '(' expr ')'
+    '''
 
 def p_error(p):
     if not p:

@@ -104,3 +104,16 @@ class DateTime(Symbol):
                 raise exceptions.RuntimeError('Fecha-hora de formato no valido. Usar YYYY-MM-DD HH:mm:ss')
         else:
             self.value = value
+
+class Proc:
+    def __init__(self,name:str,args:list,block:list) -> None:
+        self.name = name
+        self.args = args
+        self.block = block
+
+class Func:
+    def __init__(self,name:str,args:list,returnType:str,block:list) -> None:
+        self.name = name
+        self.args = args
+        self.returnType = returnType
+        self.block = block

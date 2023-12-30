@@ -48,7 +48,8 @@ reserved = {
     'case':'CASE',
     'when':'WHEN',
     'then':'THEN',
-    'else':'ELSE'
+    'else':'ELSE',
+    'exec':'EXEC'
 }
 
 tokens = [
