@@ -23,6 +23,8 @@ def interpret(body: Annotated[dict, Body()]):
         'database': '',
         'output': [],
         'result': [],
+        'block': 0,
+        'symbols': [],
     }
     try:
         xsql.lexer.errors = []
@@ -32,9 +34,10 @@ def interpret(body: Annotated[dict, Body()]):
         if len(xsql.lexer.errors) > 0 or len(xsql.parser.errors) > 0:
             raise exceptions.ParsingError('Errores en parseo. Cancelando ejecución.', 0)
         try:
-            globalContext = Context()
+            globalContext = Context(prev=None,name='Global')
             for stmt in stmts:
                 stmt.interpret(globalContext, parserState)
+            parserState['symbols'].extend(globalContext.dump())
         except exceptions.RuntimeError as error:
             parserState['output'].append(str(error))
     except exceptions.ParsingError as error:
@@ -42,7 +45,8 @@ def interpret(body: Annotated[dict, Body()]):
     return {
         'output': parserState['output'],
         'result': parserState['result'],
-        'errors': [*xsql.lexer.errors, *xsql.parser.errors]
+        'errors': [*xsql.lexer.errors, *xsql.parser.errors],
+        'symbols': parserState['symbols'],
     }
 
 if __name__ == '__main__':
