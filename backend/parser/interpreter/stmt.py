@@ -1,5 +1,5 @@
-from parser.interpreter.database import ddl,dml,ciclo
-from parser.interpreter import expr, operations
+from parser.interpreter.database import ddl,dml
+from parser.interpreter import expr, operations, exceptions
 from parser.interpreter.context import Context
 from abc import ABC, abstractmethod
 
@@ -142,25 +142,63 @@ class Update(Stmt):
         database=parserState['database']
         dml.update(context,database,self.identifier,self.condition,self.list)
 
+class Block(Stmt):
+    def __init__(self, stmts:list[Stmt]) -> None:
+        self.stmts = stmts
+
+    def interpret(self, context: Context, parserState: dict):
+        parserState['block'] += 1
+        context.name += f' Bloque {parserState["block"]}'
+        try:
+            for stmt in self.stmts:
+                stmt.interpret(context, parserState)
+        except exceptions.Return as ret:
+            parserState['symbols'].extend(context.dump())
+            return ret.value
+        parserState['symbols'].extend(context.dump())
+
 class Ciclo_while(Stmt):
-    def __init__(self,expresion,listStmt):
+    def __init__(self,expresion:expr.Expr,listStmt:Block):
         self.expresion=expresion
         self.listStmt=listStmt
+
     def interpret(self, context: Context, parserState: dict):
-        ciclo.ciclo_while(context,self.expresion,self.listStmt,parserState)
+        WhileContext = Context(context, 'While')
+        while self.expresion.interpret(context):
+            self.listStmt.interpret(WhileContext,parserState)
 
 class Ssl_IF(Stmt):
-    def __init__(self,expresion,listStmt,listStmtElse):
+    def __init__(self,expresion:expr.Expr,trueBlock:Block,falseBlock:Block|None):
         self.expresion=expresion
-        self.listStmt=listStmt
-        self.listStmtElse=listStmtElse
+        self.trueBlock=trueBlock
+        self.falseBlock=falseBlock
+
     def interpret(self, context: Context, parserState: dict):
-        ciclo.ssl_If(context,self.expresion,self.listStmt,self.listStmtElse,parserState)
+        if self.expresion.interpret(context):
+            IfContext = Context(context, 'If')
+            self.trueBlock.interpret(IfContext, parserState)
+        else:
+            if self.falseBlock:
+                ElseContext = Context(context, 'Else')
+                self.falseBlock.interpret(ElseContext, parserState)
 
 class Ssl_Case(Stmt):
     def __init__(self,ListWhen,ElseOptions,FinCase):
         self.ListWhen=ListWhen
         self.ElseOptions=ElseOptions
         self.FinCase=FinCase
+
     def interpret(self, context: Context, parserState: dict):
-        ciclo.ssl_Case(context,self.ListWhen,self.ElseOptions,self.FinCase,parserState)
+        if self.FinCase != None:
+            for Element in self.ListWhen:
+                if Element[0].interpret(context):
+                    Element[1].interpret(context,parserState)     
+        else:
+            print ("FinCase",self.FinCase)
+
+class Return(Stmt):
+    def __init__(self, expr:expr.Expr) -> None:
+        self.expr = expr
+
+    def interpret(self, context: Context, parserState: dict):
+        raise exceptions.Return(self.expr.interpret(context))

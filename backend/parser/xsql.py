@@ -40,6 +40,18 @@ def p_stmts(p):
         p[0] = []
         p[0].append(p[1])
 
+def p_block(p):
+    '''
+    block   : BEGIN stmts END
+    '''
+    p[0] = stmt.Block(p[2])
+
+def p_return(p):
+    '''
+    stmt    : RETURN expr
+    '''
+    p[0] = stmt.Return(p[2])
+
 def p_usar_F(p):
    '''
    stmt    : USAR IDENTIFIER
@@ -464,26 +476,24 @@ def p_empty(p):
 
 def p_ciclo_While(p):
     '''
-    stmt : WHILE expr BEGIN stmts END 
+    stmt : WHILE expr block
     '''
-    p[0] = stmt.Ciclo_while(p[2],p[4])
+    p[0] = stmt.Ciclo_while(p[2],p[3])
 
 def p_ssl_If(p):
     '''
-    stmt : IF expr BEGIN stmts END FinIf
+    stmt : IF expr block else
     '''
-    p[0] =stmt.Ssl_IF(p[2],p[4],p[6])
+    p[0] = stmt.Ssl_IF(p[2],p[3],p[4])
 
 def p_Fin_If(p):
     '''
-    FinIf : ELSE BEGIN stmts END 
-         | empty
+    else    : ELSE block
+            | empty
     '''
 
-    if len(p) == 5:
-        p[0] = p[3]
-    else:
-        p[0] =''
+    if len(p) != 2:
+        p[0] = p[2]
 
 def p_ssl_Case(p):
     '''

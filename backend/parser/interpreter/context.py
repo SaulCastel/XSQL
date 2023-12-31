@@ -4,10 +4,10 @@ from parser.interpreter.exceptions import RuntimeError
 from parser.interpreter.symbol import Symbol
 
 class Context:
-    def __init__(self, prev:Self|None=None, name:str|None=None) -> None:
+    def __init__(self, prev:Self|None=None, name:str='') -> None:
         self.prev = prev
-        self.symbols:dict[str,Symbol] = {}
         self.name = name
+        self.symbols:dict[str,Symbol] = {}
 
     def declare(self, key: str, value: Symbol):
         '''Declare a new symbol in the current context/scope'''
