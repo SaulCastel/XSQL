@@ -126,23 +126,38 @@ def selectFrom(
         'records': textRecords
     }
 
+def getTableContext(prev:Context, columnsData:dict[str,dict], record: ET.Element) -> Context:
+    cells = record.findall('./*')
+    context = Context(prev)
+    for cell in cells:
+        columnType = columnsData[cell.tag]['type']
+        columnLength = columnsData[cell.tag].get('length')
+        if columnLength: columnLength = int(columnLength)
+        value = operations.cast(cell.text, columnType)
+        symbol = operations.wrapInSymbol(cell.tag, value, columnType, columnLength)
+        context.declare(cell.tag, symbol)
+    missingColumns = list(set(columnsData.keys()) - set(map(lambda c: c.tag, cells)))
+    for column in missingColumns:
+        columnType = columnsData[column]['type']
+        symbol = operations.wrapInSymbol(column, None, columnType)
+        context.declare(column, symbol)
+    return context
+
 def delete(context:Context, database:str, tableName:str,
     condition:expr.Binary|None, position:tuple):
     tree = common.getDatabaseElementTree(database)
     table = tree.find(tableName)
     if not table:
         raise RuntimeError(f'No se encuentra {tableName} en: {database}', position)
-    columnsData = getTableColumns(table)
+    columnsData = common.getTableColumns(table)
     xmlRecords = table.find('records')
- 
     if condition:
-        for record in xmlRecords.iter('record'):
+        for record in xmlRecords.findall('record'):
             tableContext = getTableContext(context, columnsData, record)
             conditionPassed = condition.interpret(tableContext)
             if not conditionPassed:
                 continue
             xmlRecords.remove(record)
-            
     else:
         xmlRecords.clear()
     common.writeTreeToFile(tree, database)
@@ -152,18 +167,16 @@ def update(context:Context,database:str,tableName:str,condition:expr.Binary|None
     table = tree.find(tableName)
     if not table:
         raise RuntimeError(f'No se encuentra {tableName} en: {database}')
-    columnsData = getTableColumns(table)
+    columnsData = common.getTableColumns(table)
     xmlRecords = table.find('records')
  
     if condition:
-        for record in xmlRecords.iter('record'):
+        for record in xmlRecords.findall('record'):
             tableContext = getTableContext(context, columnsData, record)
             conditionPassed = condition.interpret(tableContext)
             for Asignacion in lista:
                     if not conditionPassed:
                         continue
-                    print("Clave: ", Asignacion[0] ,"  Valor: ", Asignacion[1])
-                    print("Si",record.find(Asignacion[0]))           
                     FilaCambia = record.find(Asignacion[0])
                     if FilaCambia != None:
                         record.find(Asignacion[0]).text = str(Asignacion[1].interpret(context))

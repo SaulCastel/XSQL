@@ -173,22 +173,20 @@ def p_Update(p):
     '''
     stmt :  UPDATE IDENTIFIER ListNewAssignment where
     '''
-
     p[0]=stmt.Update(p[2],p[3],p[4])
 
 def p_List_NewAssignment(p):
     '''
-    ListNewAssignment : ListNewAssignment ',' IDENTIFIER '=' expr
-                        | IDENTIFIER '=' expr
+    ListNewAssignment   : ListNewAssignment ',' SET IDENTIFIER '=' expr
+                        | SET IDENTIFIER '=' expr
 
     '''
     if len(p) == 6:
         p[0] = p[1]
-        p[0].append((p[3], p[5]))
+        p[0].append((p[4], p[6]))
     else:
         p[0] = []
-        p[0].append((p[1], p[3]))
-      
+        p[0].append((p[2], p[4]))
 
 def p_identifiers(p):
     '''
