@@ -254,6 +254,17 @@ def p_selection_list(p):
         p[0] = []
         p[0].append((p[1], p[2]))
 
+def p_selection_list_case(p):
+    '''
+    selection_list  : selection_list ',' expr_case
+                    | expr_case
+    '''
+    if len(p) == 2:
+        p[0] = [(p[1], None)]
+    else:
+        p[0] = p[1]
+        p[0].append((p[3], None))
+
 def p_return_expr(p):
     '''
     return_expr : expr
@@ -285,6 +296,30 @@ def p_alias(p):
         p[0] = p[2]
     else:
         p[0] = p[1]
+
+def p_expr_case(p):
+    '''
+    expr_case   : CASE expr_cases ELSE THEN expr END case_alias
+    '''
+    p[0] = expr.Case(p[2], p[5], p[7])
+
+def p_expr_cases(p):
+    '''
+    expr_cases  : expr_cases WHEN expr THEN expr
+                | WHEN expr THEN expr
+    '''
+    if len(p) == 5:
+        p[0] = [(p[2], p[4])]
+    else:
+        p[0] = p[1]
+        p[0].append((p[3], p[5]))
+
+def p_case_alias(p):
+    '''
+    case_alias  : IDENTIFIER
+                | STRING_LITERAL
+    '''
+    p[0] = p[1]
 
 def p_where(p):
     '''
@@ -423,6 +458,12 @@ def p_expr_symbol(p):
     position = getPosition(p, 2)
     p[0] = expr.Symbol('@'+p[2], position)
 
+def p_if_func(p):
+    '''
+    native  : IF '(' expr ',' expr ',' expr ')'
+    '''
+    p[0] = expr.If(p[3], p[5], p[7])
+
 def p_concatenar(p):
     '''
     native    :   CONCATENAR '(' exprs ')' 
@@ -471,7 +512,6 @@ def p_empty(p):
     '''
     pass
 
-
 def p_ciclo_While(p):
     '''
     stmt : WHILE expr block
@@ -489,58 +529,26 @@ def p_Fin_If(p):
     else    : ELSE block
             | empty
     '''
-
     if len(p) != 2:
         p[0] = p[2]
 
 def p_ssl_Case(p):
     '''
-    stmt : CASE ListWhen ELSE THEN options END finCase
+    stmt    : CASE stmt_cases ELSE THEN stmt ';' END
     '''
-    p[0] =stmt.Ssl_Case(p[2],p[5],p[7])
-    
-def p_List_When(p):
+    p[0] =stmt.Ssl_Case(p[2], p[5])
+
+def p_stmt_cases(p):
     '''
-    ListWhen  :  ListWhen WHEN optionsWhen THEN options   
-              |  WHEN optionsWhen THEN options
+    stmt_cases  : stmt_cases WHEN expr THEN stmt ';'
+                | WHEN expr THEN stmt ';'
     '''
     if len(p) == 6:
+        p[0] = [(p[2], p[4])]
+    else:
         p[0] = p[1]
         p[0].append((p[3], p[5]))
-    else:
-        p[0] = []
-        p[0].append((p[2], p[4])) 
-
-def p_options_When(p):
-    '''
-    optionsWhen : expr
-                | condition
-    '''
-    if len(p)==2:
-        p[0]=p[1]
-    else:
-        p[0]=p[1]
-
-def p_options(p):
-    '''
-    options   : expr
-              | stmt ';'
-    '''
-    if len(p)==2:
-        p[0]=p[1]
-    else:
-        p[0]=p[1]
-
-def p_finCase(p):
-    '''
-    finCase : IDENTIFIER FROM IDENTIFIER
-            | empty
-    '''
-    if len(p) == 4:
-        p[0] = ((p[1],p[3]))
-    else:
-        p[0] = ''
-
+    
 def p_error(p):
     if not p:
         raise exceptions.ParsingError(f'Formato de entrada incorrecto', 0)

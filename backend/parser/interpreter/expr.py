@@ -193,3 +193,33 @@ class Sumar:
             if cell.value:
                 sum += cell.value
         return sum
+
+class If(Expr):
+    def __init__(self, condition:Expr, trueExpr:Expr, falseExpr:Expr) -> None:
+        self.condition = condition
+        self.trueExpr = trueExpr
+        self.falseExpr = falseExpr
+
+    def __str__(self) -> str:
+        return f'if({self.condition}, {self.trueExpr}, {self.falseExpr})'
+
+    def interpret(self, context: Context) -> Any:
+        if self.condition.interpret(context):
+            return self.trueExpr.interpret(context)
+        return self.falseExpr.interpret(context)
+
+class Case(Expr):
+    def __init__(self, cases:list[tuple[Expr, Expr]], default:Expr, alias:str) -> None:
+        self.cases = cases
+        self.default = default
+        self.alias = alias
+
+    def __str__(self) -> str:
+        return self.alias
+
+    def interpret(self, context: Context) -> Any:
+        for case in self.cases:
+            if not case[0].interpret(context):
+                continue
+            return case[1].interpret(context)
+        return self.default.interpret(context)

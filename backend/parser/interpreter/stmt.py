@@ -183,18 +183,18 @@ class Ssl_IF(Stmt):
                 self.falseBlock.interpret(ElseContext, parserState)
 
 class Ssl_Case(Stmt):
-    def __init__(self,ListWhen,ElseOptions,FinCase):
+    def __init__(self, ListWhen:list[tuple[expr.Expr, Stmt]], ElseOptions:Stmt):
         self.ListWhen=ListWhen
         self.ElseOptions=ElseOptions
-        self.FinCase=FinCase
 
     def interpret(self, context: Context, parserState: dict):
-        if self.FinCase != None:
-            for Element in self.ListWhen:
-                if Element[0].interpret(context):
-                    Element[1].interpret(context,parserState)     
+        for Element in self.ListWhen:
+            if not Element[0].interpret(context):
+                continue
+            Element[1].interpret(context,parserState)     
+            break
         else:
-            print ("FinCase",self.FinCase)
+            self.ElseOptions.interpret(context, parserState)
 
 class Return(Stmt):
     def __init__(self, expr:expr.Expr) -> None:
