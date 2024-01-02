@@ -125,6 +125,132 @@ const DynamicTabs = forwardRef((props, ref) => {
     saveAs(blob, 'archivo.sql');
   };
 
+  // Errores
+  const ErrorTable = ({ errors }) => {
+    return (
+      <table className="table table-dark table-striped">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Descripción</th>
+            <th scope="col">Línea</th>
+            <th scope="col">Columna</th>
+          </tr>
+        </thead>
+        <tbody>
+          {errors.map((errorGroup, index) => (
+            errorGroup.map((error, subIndex) => (
+              <tr key={`${index}-${subIndex}`}>
+                <th scope="row">{index * errorGroup.length + subIndex + 1}</th>
+                <td>{error.type}</td>
+                <td>{error.error}</td>
+                <td>{error.line}</td>
+                <td>{error.col}</td>
+              </tr>
+            ))
+          ))}
+        </tbody>
+      </table>
+    );
+  };
+
+  const generateErrorTable = () => {
+    const errors = [
+      [
+        {
+          type: "lexico",
+          error: "#",
+          line: 1,
+          col: 0
+        },
+        {
+          type: "sintactico",
+          error: "end",
+          line: 1,
+          col: 183
+        },
+        {
+          type: "sintactico",
+          error: "(",
+          line: 47,
+          col: 83
+        },
+        {
+          type: "lexico",
+          error: "cointar",
+          line: 51,
+          col: 13
+        },
+      ],
+    ];
+
+    return <ErrorTable errors={errors} />;
+  };
+
+  // Tabla de simbolos
+  const SymbolTable = ({ symbols }) => {
+    return (
+      <table className="table table-success table-striped">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Descripción</th>
+            <th scope="col">Línea</th>
+            <th scope="col">Columna</th>
+          </tr>
+        </thead>
+        <tbody>
+          {symbols.map((errorGroup, index) => (
+            errorGroup.map((error, subIndex) => (
+              <tr key={`${index}-${subIndex}`}>
+                <th scope="row">{index * errorGroup.length + subIndex + 1}</th>
+                <td>{error.type}</td>
+                <td>{error.error}</td>
+                <td>{error.line}</td>
+                <td>{error.col}</td>
+              </tr>
+            ))
+          ))}
+        </tbody>
+      </table>
+    );
+  };
+
+  const generateSymbolTable = () => {
+    const symbols = [
+      [
+        {
+          type: "lexico",
+          error: "#",
+          line: 1,
+          col: 0
+        },
+        {
+          type: "sintactico",
+          error: "end",
+          line: 1,
+          col: 183
+        },
+        {
+          type: "sintactico",
+          error: "(",
+          line: 47,
+          col: 83
+        },
+        {
+          type: "lexico",
+          error: "cointar",
+          line: 51,
+          col: 13
+        },
+      ],
+    ];
+
+    return <SymbolTable symbols={symbols} />;
+  };
+
   const handleEditorChange = (tabKey, value) => {
     setTabs((prevTabs) =>
       prevTabs.map((tab) =>
@@ -193,6 +319,7 @@ const DynamicTabs = forwardRef((props, ref) => {
           <Button variant="primary" onClick={() => setShowEditor(!showEditor)}>
             {showEditor ? "Ocultar Editor" : "Mostrar Editor"}
           </Button>
+          <button onClick={generateErrorTable()}>Errores</button>
 
           <Tabs activeKey={key} onSelect={(k) => setKey(k)}>
             {tabs.map((tab) => (
@@ -261,69 +388,11 @@ const DynamicTabs = forwardRef((props, ref) => {
                 <div className="container-fluid">
                   <div>
                     <h1>REPORTE DE ERRORES</h1>
-                    <table className="table table-dark table-striped">
-                      <thead>
-                        <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">Tipo</th>
-                          <th scope="col">Descripción</th>
-                          <th scope="col">Línea</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <th scope="row">1</th>
-                          <td>Léxico</td>
-                          <td>No se reconoce '¬' en el lenguaje</td>
-                          <td>4:8</td>
-                        </tr>
-                        <tr>
-                          <th scope="row">2</th>
-                          <td>Sintáctico</td>
-                          <td>Se esperaba un identificador</td>
-                          <td>62:10</td>
-                        </tr>
-                        <tr>
-                          <th scope="row">3</th>
-                          <td>Semántico</td>
-                          <td>No puedes asignar un float a un int</td>
-                          <td>73:9</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                    {generateErrorTable()}
                   </div>
                   <div>
                     <h1>TABLA DE SÍMBOLOS</h1>
-                    <table class="table table-success table-striped">
-                      <thead>
-                        <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">Token</th>
-                          <th scope="col">Valor</th>
-                          <th scope="col">Ámbito</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <th scope="row">1</th>
-                          <td>signo_igual</td>
-                          <td>=</td>
-                          <td>global</td>
-                        </tr>
-                        <tr>
-                          <th scope="row">2</th>
-                          <td>resta</td>
-                          <td>-</td>
-                          <td>func_a</td>
-                        </tr>
-                        <tr>
-                          <th scope="row">3</th>
-                          <td>identificador</td>
-                          <td>id_uno</td>
-                          <td>global</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                    {generateSymbolTable()}
                   </div>
                   <div>
                     <h1>AST</h1>

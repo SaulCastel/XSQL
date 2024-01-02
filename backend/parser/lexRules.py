@@ -52,7 +52,7 @@ reserved = {
     'sumar':'SUMAR',
     'between':'BETWEEN',
     'and':'AND',
-    'column':'COLUMN',,
+    'column':'COLUMN',
     'exec':'EXEC'
 }
 

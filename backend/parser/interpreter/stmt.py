@@ -1,12 +1,5 @@
-<<<<<<< HEAD
-
-from parser.interpreter.database import ddl,dml,ciclo, ssl
-from parser.interpreter import expr, operations, exceptions
-from parser.interpreter import symbol
-=======
 from parser.interpreter.database import ddl,dml
 from parser.interpreter import expr, operations, exceptions
->>>>>>> dcd25b501d95d92312815ba9a457c5f2ed39144f
 from parser.interpreter.context import Context
 from abc import ABC, abstractmethod
 
@@ -195,46 +188,6 @@ class Ssl_Case(Stmt):
         self.ElseOptions=ElseOptions
 
     def interpret(self, context: Context, parserState: dict):
-<<<<<<< HEAD
-        ciclo.ssl_Case(context,self.ListWhen,self.ElseOptions,self.FinCase,parserState)
-        
-class Create_procedure(Stmt):
-    def __init__(self, identifier, parameters, listStmt):
-        self.identifier = identifier
-        self.parameters = parameters
-        self.listStmt = listStmt
-    def interpret(self, context: Context, parserState:dict):
-        proc = symbol.Proc(self.identifier,self.parameters,self.listStmt)
-        context.declare(self.identifier, proc)
-        
-class Create_function(Stmt):
-    def __init__(self, identifier, parameters, returnType, listStmt) -> None:
-        self.identifier=identifier
-        self.parameters=parameters
-        self.returnType=returnType
-        self.listStmt=listStmt
-    def interpret(self, context: Context, parserState:dict):
-        func = symbol.Func(self.identifier,self.parameters, self.returnType, self.listStmt)
-        context.declare(self.identifier, func)
-        
-class Exec_procedure(Stmt):
-    def __init__(self, identifier, parameters) -> None:
-        self.identifier = identifier
-        self.parameters = parameters
-    def interpret(self, context: Context, parserState: dict):
-        proc = context.get(self.identifier)
-        proc_context = Context(context)
-        
-        if len(self.parameters) != len(proc.args):
-            raise exceptions.RuntimeError("Error: la cantidad de parametros no coinciden con los argumentos declarados")
-        
-        for i in range(len(self.parameters)):
-            value = self.parameters[i].interpret(context)
-            proc_context(proc.args[i], value)
-        
-        for instruction in proc.block:
-            instruction.interpret(proc_context,parserState)    
-=======
         for Element in self.ListWhen:
             if not Element[0].interpret(context):
                 continue
@@ -249,4 +202,3 @@ class Return(Stmt):
 
     def interpret(self, context: Context, parserState: dict):
         raise exceptions.Return(self.expr.interpret(context))
->>>>>>> dcd25b501d95d92312815ba9a457c5f2ed39144f

@@ -585,7 +585,7 @@ def p_parameters(p):
 # -- Llamada procedimientos
 def p_exec_procedure(p):
     '''
-    stmt    : EXECT IDENTIFIER call_params
+    stmt    : EXEC IDENTIFIER call_params
     '''
 
 def p_call_params(p):
@@ -625,11 +625,11 @@ def p_block_stmts(p):
         p[0] = []
         p[0].append(p[1])
     
-def p_extend_stmt(p):
-    '''
-    extend_stmt  : IF, ELSE, DECLARE, SET, INSERT, RETURN, CASE
-    '''    
-    p[0] = p[1]
+# def p_extend_stmt(p):
+#     '''
+#     extend_stmt  : IF, ELSE, DECLARE, SET, INSERT, RETURN, CASE
+#     '''    
+#     p[0] = p[1]
     
 def p_call_function(p):
     '''
