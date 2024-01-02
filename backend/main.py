@@ -5,6 +5,7 @@ from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Annotated
 import uvicorn
+import subprocess
 
 app = FastAPI()
 
@@ -56,7 +57,7 @@ def interpret(body: Annotated[dict, Body()]):
         dot += '}'
         with open('ast.dot', 'w') as file:
             file.write(dot)
-        parserState['ast'].append(str(dot))
+        subprocess.run(['dot','-Tsvg', '-O', 'ast.dot'])
     except exceptions.ParsingError as error:
         parserState['output'].append(str(error))
     return {
@@ -64,7 +65,6 @@ def interpret(body: Annotated[dict, Body()]):
         'result': parserState['result'],
         'errors': [*xsql.lexer.errors, *xsql.parser.errors],
         'symbols': parserState['symbols'],
-        'ast':parserState['ast'],
     }
 
 

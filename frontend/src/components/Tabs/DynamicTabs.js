@@ -32,7 +32,7 @@ const generateFormattedTables = (resultData) => {
       if (!table) return '';
 
       const headers = table.header;
-      const rows = table.records.map((record) => record.map((value) => value.trim()));
+      const rows = table.records.map((record) => record.map((value) => String(value).trim()));
 
       const columnSizes = headers.reduce((sizes, header, columnIndex) => {
         const maxContentLength = Math.max(
@@ -83,71 +83,76 @@ const DynamicTabs = forwardRef((props, ref) => {
   // Errores
   const ErrorTable = () => {
     const currentTab = tabs.find((tab) => tab.key === key);
-    const errors = currentTab.errorTable
-    if (!Array.isArray(errors)) {
-      return <p>No hay errores para mostrar.</p>;
+    if (currentTab) {
+
+      const errors = currentTab.errorTable
+      if (!Array.isArray(errors)) {
+        return <p>No hay errores para mostrar.</p>;
+      }
+      return (
+        <table className="table table-dark table-striped">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Descripción</th>
+              <th scope="col">Línea</th>
+              <th scope="col">Columna</th>
+            </tr>
+          </thead>
+          <tbody>
+            {errors.map((errorGroup, index) => (
+              errorGroup.map((error, subIndex) => (
+                <tr key={`${index}-${subIndex}`}>
+                  <th scope="row">{index * errorGroup.length + subIndex + 1}</th>
+                  <td>{error.type}</td>
+                  <td>{error.error}</td>
+                  <td>{error.line}</td>
+                  <td>{error.col}</td>
+                </tr>
+              ))
+            ))}
+          </tbody>
+        </table>
+      );
     }
-    return (
-      <table className="table table-dark table-striped">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Tipo</th>
-            <th scope="col">Descripción</th>
-            <th scope="col">Línea</th>
-            <th scope="col">Columna</th>
-          </tr>
-        </thead>
-        <tbody>
-          {errors.map((errorGroup, index) => (
-            errorGroup.map((error, subIndex) => (
-              <tr key={`${index}-${subIndex}`}>
-                <th scope="row">{index * errorGroup.length + subIndex + 1}</th>
-                <td>{error.type}</td>
-                <td>{error.error}</td>
-                <td>{error.line}</td>
-                <td>{error.col}</td>
-              </tr>
-            ))
-          ))}
-        </tbody>
-      </table>
-    );
   };
 
   // Tabla de simbolos
   const SymbolTable = () => {
     const currentTab = tabs.find((tab) => tab.key === key);
-    const symbols = currentTab.symbolTable
-    if (!Array.isArray(symbols)) {
-      return <p>No hay símbolos para mostrar.</p>;
+    if (currentTab) {
+      const symbols = currentTab.symbolTable
+      if (!Array.isArray(symbols)) {
+        return <p>No hay símbolos para mostrar.</p>;
+      }
+      return (
+        <table className="table table-success table-striped">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Tamaño</th>
+              <th scope="col">Valor</th>
+              <th scope="col">Ámbito</th>
+            </tr>
+          </thead>
+          <tbody>
+            {symbols.map((symbolGroup, index) => (
+              symbolGroup.map((symbol, subIndex) => (
+                <tr key={`${index}-${subIndex}`}>
+                  <th scope="row">{index * symbolGroup.length + subIndex + 1}</th>
+                  <td>{symbol.id}</td>
+                  <td>{symbol.type}</td>
+                  <td>{symbol.length}</td>
+                  <td>{symbol.where}</td>
+                </tr>
+              ))
+            ))}
+          </tbody>
+        </table>
+      );
     }
-    return (
-      <table className="table table-success table-striped">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Tipo</th>
-            <th scope="col">Tamaño</th>
-            <th scope="col">Valor</th>
-            <th scope="col">Ámbito</th>
-          </tr>
-        </thead>
-        <tbody>
-          {symbols.map((symbolGroup, index) => (
-            symbolGroup.map((symbol, subIndex) => (
-              <tr key={`${index}-${subIndex}`}>
-                <th scope="row">{index * symbolGroup.length + subIndex + 1}</th>
-                <td>{symbol.id}</td>
-                <td>{symbol.type}</td>
-                <td>{symbol.length}</td>
-                <td>{symbol.where}</td>
-              </tr>
-            ))
-          ))}
-        </tbody>
-      </table>
-    );
   };
 
   const convertGraphString = (inputString) => {
@@ -162,7 +167,6 @@ const DynamicTabs = forwardRef((props, ref) => {
 
     return finalString;
   };
-
 
   const handleEditorChange = (tabKey, value) => {
     setTabs((prevTabs) =>
@@ -197,12 +201,11 @@ const DynamicTabs = forwardRef((props, ref) => {
       tab.key === key ? { ...tab, content: formattedTables, output: outputData.join('\n'), errorTable: dataError, symbolTable: dataSymbol, astTree: convertedString } : tab
     );
     setTabs(updatedTabs);
-
   };
 
   const addTab = () => {
     const newKey = `query${tabs.length + 1}`;
-    const newTab = { key: newKey, title: `Query ${tabs.length + 1}`, content: '', output: '' };
+    const newTab = { key: newKey, title: `Query ${tabs.length + 1}`, content: '', output: '', editorContent: props.sqlContent[key] || '', errorTable: '', symbolTable: '', astTree: 'graph AST {}' };
     setTabs([...tabs, newTab]);
     setKey(newKey);
   };
@@ -318,14 +321,10 @@ const DynamicTabs = forwardRef((props, ref) => {
                   </div>
                   <div>
                     <h1>TABLA DE SÍMBOLOS</h1>
-                    {SymbolTable(tab.symbolTable)}
+                    {SymbolTable()}
                   </div>
                   <div>
                     <h1>AST</h1>
-                    {
-                      <Graphviz dot={
-                      tab.astTree
-                    } />}
                   </div>
                 </div>
               </Tab>

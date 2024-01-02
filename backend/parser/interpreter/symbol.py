@@ -22,7 +22,7 @@ class Symbol(ABC):
             return
         if not isinstance(value, self.t):
             valueType = type(value).__name__
-            raise RuntimeError(f'Simbolo {self.key} de tipo: {self.t} no puede ser asignado a tipo: {valueType}')
+            raise exceptions.RuntimeError(f'Simbolo {self.key} de tipo: {self.t} no puede ser asignado a tipo: {valueType}')
 
 class VarChar(Symbol):
     def __init__(self, key:str, value:str|None, length:int):

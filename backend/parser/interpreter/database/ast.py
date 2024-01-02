@@ -138,6 +138,7 @@ def selectFrom(
     dot += f'"stmt{contador}" -- "{contador}" \n'
     if returnExprs !=None:
         for Expr in returnExprs:
+
             cadena = Expr[0].GenerarAST()
             if cadena:
                 dot += cadena
