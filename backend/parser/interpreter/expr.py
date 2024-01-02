@@ -332,10 +332,11 @@ class Case(Expr):
         return dot
 
 class CallFunc(Expr):
-    def __init__(self, key:str, args:list, position:tuple) -> None:
+    def __init__(self, key:str, args:list, position:tuple,contador:int) -> None:
         self.key = key
         self.args = args
         self.position = position
+        self.contador = contador
 
     def __str__(self) -> str:
         return operations.printSignature(self.key, self.args)
@@ -357,4 +358,10 @@ class CallFunc(Expr):
                 length = int(length)
             sym = operations.wrapInSymbol(key, value, argType, length)
             funcContext.declare(key, sym)
-        return func.block.interpret(funcContext, None)
+        return func.block.interpret(funcContext,None)
+
+    def GenerarAST(self):
+        
+        dot = f'"{self.contador}" [label="CallFunction"]\n'
+        
+        return dot
