@@ -22,6 +22,8 @@ precedence = (
     ('right', 'UMINUS'),
 )
 
+contadorGloblal = 0
+
 def p_start(p):
     '''
     script  : stmts
@@ -44,13 +46,17 @@ def p_usar_F(p):
    '''
    stmt    : USAR IDENTIFIER
    '''
-   p[0] = stmt.Usar(p[2])
+   global contadorGloblal 
+   contadorGloblal += 1
+   p[0] = stmt.Usar(p[2],contadorGloblal)
 
 def p_create_base(p):
     '''
     stmt    : CREATE DATA BASE IDENTIFIER
     '''
-    p[0] = stmt.CreateBase(p[4])
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] = stmt.CreateBase(p[4],contadorGloblal)
 
 
 
@@ -59,13 +65,17 @@ def p_create_table(p):
     stmt     : CREATE TABLE IDENTIFIER '(' table_structure ')'
 
     '''
-    p[0]= stmt.CreateTable(p[3], p[5])
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0]= stmt.CreateTable(p[3], p[5],contadorGloblal)
 
 def p_truncate_table(p):
     '''
     stmt     : TRUNCATE TABLE IDENTIFIER 
     '''
-    p[0] = stmt.Truncate(p[3], getPosition(p, 1))
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] = stmt.Truncate(p[3], getPosition(p, 1),contadorGloblal)
     
 def p_table_structure(p):
     '''
@@ -129,34 +139,44 @@ def p_alter_add(p):
    '''
    stmt : ALTER TABLE IDENTIFIER ADD COLUMN column_declaration
    '''
-   p[0] = stmt.AlterADD(p[3], p[6], getPosition(p, 1))
+   global contadorGloblal 
+   contadorGloblal += 1
+   p[0] = stmt.AlterADD(p[3], p[6], getPosition(p, 1),contadorGloblal)
 
 def p_alter_drop(p):
    '''
    stmt : ALTER TABLE IDENTIFIER DROP COLUMN IDENTIFIER 
    '''
-   p[0] = stmt.AlterDROP(p[3], p[6], getPosition(p, 1))
+   global contadorGloblal 
+   contadorGloblal += 1
+   p[0] = stmt.AlterDROP(p[3], p[6], getPosition(p, 1),contadorGloblal)
 
 def p_drop_table(p):
     '''
     stmt    : DROP TABLE IDENTIFIER
     '''
-    p[0] = stmt.DropTable(p[3], getPosition(p, 1))
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] = stmt.DropTable(p[3], getPosition(p, 1),contadorGloblal)
 
 def p_insert(p):
     '''
     stmt : INSERT INTO IDENTIFIER '(' identifiers ')' VALUES '(' exprs ')'   
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 1)
-    p[0] = stmt.Insert(p[3], p[5], p[9], position)
-
+    p[0] = stmt.Insert(p[3], p[5], p[9], position,contadorGloblal)
+################################################################################
 def p_Delete(p):
     '''
     stmt : DELETE FROM IDENTIFIER where
     '''
-    p[0] = stmt.Delete(p[3],p[4],None) 
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] = stmt.Delete(p[3],p[4],None,contadorGloblal) 
 
-
+################################################################################
 def p_Update(p):
     '''
     stmt :  UPDATE IDENTIFIER ListNewAssignment where
@@ -206,31 +226,39 @@ def p_stmt_declare(p):
     stmt    : DECLARE '@' IDENTIFIER AS type
             | DECLARE '@' IDENTIFIER type
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     if len(p) == 6:
-        p[0] = stmt.Declare('@'+p[3], p[5][0], p[5][1])
+        p[0] = stmt.Declare('@'+p[3], p[5][0], p[5][1],contadorGloblal)
     else:
-        p[0] = stmt.Declare('@'+p[3], p[4][0], p[4][1])
+        p[0] = stmt.Declare('@'+p[3], p[4][0], p[4][1],contadorGloblal)
 
 def p_stmt_assignment(p):
     '''
     stmt    : SET '@' IDENTIFIER '=' expr
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 3)
-    p[0] = stmt.Set('@'+p[3], p[5], position)
+    p[0] = stmt.Set('@'+p[3], p[5], position,contadorGloblal)
 
 def p_stmt_select_from(p):
     '''
     stmt    : SELECT '*' FROM identifiers where
             | SELECT selection_list FROM identifiers where
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 1)
-    p[0] = stmt.SelectFrom(p[4], p[2], p[5], position)
+    p[0] = stmt.SelectFrom(p[4], p[2], p[5], position,contadorGloblal)
 
 def p_stmt_select(p):
     '''
     stmt    : SELECT selection_list
     '''
-    p[0] = stmt.Select(p[2])
+    global contadorGloblal
+    contadorGloblal+=1
+    p[0] = stmt.Select(p[2],contadorGloblal)
 
 def p_selection_list(p):
     '''
@@ -257,13 +285,17 @@ def p_contar(p):
     contar  : CONTAR '(' '*' ')'
             | CONTAR '(' symbol ')'
     '''
-    p[0] = expr.Contar(p[3], getPosition(p, 1))
+    global contadorGloblal
+    contadorGloblal+=1
+    p[0] = expr.Contar(p[3], getPosition(p, 1),contadorGloblal)
 
 def p_sumar(p):
     '''
     sumar   : SUMAR '(' symbol ')'
     '''
-    p[0] = expr.Sumar(p[3], getPosition(p, 1))
+    global contadorGloblal
+    contadorGloblal+=1
+    p[0] = expr.Sumar(p[3], getPosition(p, 1),contadorGloblal)
 
 def p_alias(p):
     '''
@@ -289,8 +321,10 @@ def p_condition_logical(p):
     condition   : condition LOGICAL_AND condition
                 | condition LOGICAL_OR condition
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 2)
-    p[0] = expr.Binary(p[1], p[2], p[3], position)
+    p[0] = expr.Binary(p[1], p[2], p[3], position,contadorGloblal)
 
 def p_condition_relational(p):
     '''
@@ -301,8 +335,10 @@ def p_condition_relational(p):
                 | symbol '=' condition_expr
                 | symbol NOT_EQUALS condition_expr
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 2)
-    p[0] = expr.Binary(p[1], p[2], p[3], position)
+    p[0] = expr.Binary(p[1], p[2], p[3], position,contadorGloblal)
 
 def p_condition_arithmetic(p):
     '''
@@ -311,16 +347,20 @@ def p_condition_arithmetic(p):
                     | condition_expr '/' condition_expr
                     | condition_expr '*' condition_expr
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 2)
-    p[0] = expr.Binary(p[1], p[2], p[3], position)
+    p[0] = expr.Binary(p[1], p[2], p[3], position,contadorGloblal)
 
 def p_condition_unary(p):
     '''
     condition_expr  : '!' condition_expr
                     | '-' condition_expr %prec UMINUS
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 1)
-    p[0] = expr.Unary(p[1], p[2], position)
+    p[0] = expr.Unary(p[1], p[2], position,contadorGloblal)
 
 def p_condition_group(p):
     '''
@@ -342,8 +382,10 @@ def p_ternary_between(p):
     expr    : expr BETWEEN expr AND expr
     condition   : symbol BETWEEN condition_expr AND condition_expr
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 2)
-    p[0] = expr.Between(p[1], p[3], p[5], position)
+    p[0] = expr.Between(p[1], p[3], p[5], position,contadorGloblal)
 
 def p_expr_binary(p):
     '''
@@ -360,16 +402,20 @@ def p_expr_binary(p):
             | expr LOGICAL_AND expr
             | expr LOGICAL_OR expr
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 2)
-    p[0] = expr.Binary(p[1], p[2], p[3], position)
+    p[0] = expr.Binary(p[1], p[2], p[3], position,contadorGloblal)
 
 def p_expr_unary(p):
     '''
     expr    : '-' expr %prec UMINUS
             | '!' expr
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 1)
-    p[0] = expr.Unary(p[1], p[2], position)
+    p[0] = expr.Unary(p[1], p[2], position,contadorGloblal)
 
 def p_expr_group(p):
     '''
@@ -392,16 +438,20 @@ def p_literal(p):
             | DECIMAL_LITERAL
             | STRING_LITERAL
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 1)
-    p[0] = expr.Literal(p[1], position)
+    p[0] = expr.Literal(p[1], position,contadorGloblal)
 
 def p_symbol(p):
     '''
     symbol  : symbol '.' IDENTIFIER
             | IDENTIFIER
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     if len(p) == 2:
-        p[0] = expr.Symbol(p[1], getPosition(p, 1))
+        p[0] = expr.Symbol(p[1], getPosition(p, 1),contadorGloblal)
     else:
         p[0] = p[1]
         p[0].key += f'.{p[3]}'
@@ -410,29 +460,37 @@ def p_expr_symbol(p):
     '''
     varCall : '@' IDENTIFIER
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 2)
-    p[0] = expr.Symbol('@'+p[2], position)
+    p[0] = expr.Symbol('@'+p[2], position,contadorGloblal)
 
 def p_concatenar(p):
     '''
     native    :   CONCATENAR '(' exprs ')' 
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 1)
-    p[0] = expr.Concatenar(p[3], position)
+    p[0] = expr.Concatenar(p[3], position,contadorGloblal)
 
 def p_substraer(p):
     '''
     native    :   SUBSTRAER '(' exprs ')' 
     '''
+    global contadorGloblal 
+    contadorGloblal += 1
     position = getPosition(p, 1)
-    p[0] = expr.Substaer(p[3], position)
+    p[0] = expr.Substaer(p[3], position,contadorGloblal)
 
 
 def p_hoy(p):
     '''
     native    :   HOY '(' ')' 
     '''
-    p[0] = expr.Hoy()
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] = expr.Hoy(contadorGloblal)
 
 def p_type(p):
     '''
