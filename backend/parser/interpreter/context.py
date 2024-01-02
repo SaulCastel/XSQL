@@ -1,29 +1,12 @@
 from typing import Any 
+from typing_extensions import Self
 from parser.interpreter.exceptions import RuntimeError
 from parser.interpreter.symbol import Symbol
 
-class Symbol:
-    def __init__(self, key: str, value: Any, t:Any):
-        self.key = key
-        self.value = value
-        self.t = t
-
-    def update(self, value):
-        '''
-        Update Symbols's value.
-        Raises RuntimeError on mismatching types
-        '''
-#        if not isinstance(value, self.t):
-#            valueType = type(value).__name__
-#            raise RuntimeError(f'Simbolo {self.key} de tipo {self.t} no puede ser reasignado a tipo {valueType}')
-        self.value = value
-
-
-
-
 class Context:
-    def __init__(self, prev = None) -> None:
+    def __init__(self, prev:Self|None=None, name:str='') -> None:
         self.prev = prev
+        self.name = name
         self.symbols:dict[str,Symbol] = {}
 
     def declare(self, key: str, value: Symbol):
@@ -51,3 +34,15 @@ class Context:
                 raise RuntimeError(f'No se reconoce {key} como un simbolo', position)
             symbol = self.prev.get(key, position)
         return symbol
+
+    def dump(self) -> list[str]:
+        symbols = []
+        for key, symbol in self.symbols.items():
+            symbols.append({
+                'id':key,
+                'type':symbol.__class__.__name__,
+                'length':symbol.length,
+                'value':symbol.__str__(),
+                'where':self.name,
+            })
+        return symbols

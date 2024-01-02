@@ -5,24 +5,38 @@ from parser.interpreter.database.table import Table
 from . import common
 import xml.etree.ElementTree as ET
 
-def insert(context:Context, database:str, tableName:str, selection:list, values:list, position:tuple):
+def insert(
+    context:Context, database:str, tableName:str,
+    selection:list[str], values:list[expr.Expr],
+    position:tuple
+):
     tree = common.getDatabaseElementTree(database)
     table = tree.find(tableName)
     if table == None:
         raise RuntimeError(f'No se encuentra {tableName} en: {database}', position)
+    columns = common.getTableColumns(table)
+    for column in selection:
+        if column in columns.keys(): continue
+        raise RuntimeError(f'No se encuentra {column} en: {tableName}', position)
     required = map(lambda e: e.tag, table.findall("columns/*[@null='no']"))
     for column in required:
-        if column not in selection:
-            raise RuntimeError(f'Columna: {column} es obligatoria', position)
-    columns = common.getTableColumns(table)
+        if column in selection: continue
+        raise RuntimeError(f'Columna: {column} es obligatoria', position)
+    primaryKey = tuple(map(lambda e: e.tag, table.findall('columns/*[@key="primary"]')))
+    rowData = {}
+    for i in range(len(selection)):
+        rowData[selection[i]] = values[i].interpret(context)
+    newUniqueValue = list(map(lambda key: str(rowData[key]), primaryKey))
     records = table.find('records')
+    for record in records.iter('record'):
+        pKey = list(map(lambda key: record.find(key).text, primaryKey))
+        if newUniqueValue != pKey: continue
+        raise RuntimeError(f'Valor para llave primaria {primaryKey} repetido', position)
     record = ET.Element('record')
     for i in range(len(selection)):
-        if selection[i] not in columns.keys():
-            raise RuntimeError(f'No se encuentra {selection[i]} en: {tableName}', position)
         columnType = columns[selection[i]]['type']
         typeLength = columns[selection[i]].get('length')
-        value = values[i].interpret(context)
+        value = rowData.get(selection[i])
         if typeLength:
             typeLength = int(typeLength)
         wrapedValue = operations.wrapInSymbol(selection[i], value, columnType, typeLength)
@@ -84,7 +98,7 @@ def selectFrom(
     else:
         tableData = tableData[0]
     columnList = tableData.columnList
-    textRecords = []
+    records = []
     if condition:
         for record in tableData.records:
             recordContext = Context(context)
@@ -93,20 +107,41 @@ def selectFrom(
             conditionPassed = condition.interpret(recordContext)
             if not conditionPassed:
                 continue
-            textRecord = interpretReturnExprs(returnExprs, recordContext, columnList, position)
-            textRecords.append(textRecord)
+            records.append(recordContext)
     else:
         for record in tableData.records:
             recordContext = Context(context)
             for key, value in record.items():
                 recordContext.declare(key, value)
-            textRecord = interpretReturnExprs(returnExprs, recordContext, columnList, position)
+            records.append(recordContext)
+    textRecords = []
+    if type(returnExprs[0][0]) == expr.Contar or type(returnExprs[0][0]) == expr.Sumar:
+        textRecords.append([str(returnExprs[0][0].interpret(records))])
+    else:
+        for record in records:
+            textRecord = interpretReturnExprs(returnExprs, record, columnList, position)
             textRecords.append(textRecord)
     return {
         'header': getTableHeader(returnExprs, columnList),
         'records': textRecords
     }
 
+def getTableContext(prev:Context, columnsData:dict[str,dict], record: ET.Element) -> Context:
+    cells = record.findall('./*')
+    context = Context(prev)
+    for cell in cells:
+        columnType = columnsData[cell.tag]['type']
+        columnLength = columnsData[cell.tag].get('length')
+        if columnLength: columnLength = int(columnLength)
+        value = operations.cast(cell.text, columnType)
+        symbol = operations.wrapInSymbol(cell.tag, value, columnType, columnLength)
+        context.declare(cell.tag, symbol)
+    missingColumns = list(set(columnsData.keys()) - set(map(lambda c: c.tag, cells)))
+    for column in missingColumns:
+        columnType = columnsData[column]['type']
+        symbol = operations.wrapInSymbol(column, None, columnType)
+        context.declare(column, symbol)
+    return context
 
 def delete(context:Context, database:str, tableName:str,
     condition:expr.Binary|None, position:tuple):
@@ -114,39 +149,34 @@ def delete(context:Context, database:str, tableName:str,
     table = tree.find(tableName)
     if not table:
         raise RuntimeError(f'No se encuentra {tableName} en: {database}', position)
-    columnsData = getTableColumns(table)
+    columnsData = common.getTableColumns(table)
     xmlRecords = table.find('records')
- 
     if condition:
-        for record in xmlRecords.iter('record'):
+        for record in xmlRecords.findall('record'):
             tableContext = getTableContext(context, columnsData, record)
             conditionPassed = condition.interpret(tableContext)
             if not conditionPassed:
                 continue
             xmlRecords.remove(record)
-            
     else:
         xmlRecords.clear()
     common.writeTreeToFile(tree, database)
-
 
 def update(context:Context,database:str,tableName:str,condition:expr.Binary|None, lista :list ):
     tree = common.getDatabaseElementTree(database)
     table = tree.find(tableName)
     if not table:
         raise RuntimeError(f'No se encuentra {tableName} en: {database}')
-    columnsData = getTableColumns(table)
+    columnsData = common.getTableColumns(table)
     xmlRecords = table.find('records')
  
     if condition:
-        for record in xmlRecords.iter('record'):
+        for record in xmlRecords.findall('record'):
             tableContext = getTableContext(context, columnsData, record)
             conditionPassed = condition.interpret(tableContext)
             for Asignacion in lista:
                     if not conditionPassed:
                         continue
-                    print("Clave: ", Asignacion[0] ,"  Valor: ", Asignacion[1])
-                    print("Si",record.find(Asignacion[0]))           
                     FilaCambia = record.find(Asignacion[0])
                     if FilaCambia != None:
                         record.find(Asignacion[0]).text = str(Asignacion[1].interpret(context))
@@ -155,5 +185,3 @@ def update(context:Context,database:str,tableName:str,condition:expr.Binary|None
                         column.text = str(Asignacion[1].interpret(context))
                         record.append(column)
     common.writeTreeToFile(tree, database)  
-    #for Asignacion in lista:
-    #    print("Clave: ", Asignacion[0] ,"  Valor: ", Asignacion[1])

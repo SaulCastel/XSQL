@@ -9,3 +9,8 @@ class RuntimeError(Exception):
 class ParsingError(Exception):
     def __init__(self, message:str, lineno) -> None:
         super().__init__(f'Error de parseo en fila {lineno}: {message}')
+
+class Return(Exception):
+    def __init__(self, value):
+        super().__init__()
+        self.value = value

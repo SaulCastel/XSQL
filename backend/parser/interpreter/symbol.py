@@ -8,6 +8,7 @@ class Symbol(ABC):
         self.key = key
         self.t = t
         self.value = None
+        self.length = None
 
     @abstractmethod
     def update(self, value:Any) -> None:

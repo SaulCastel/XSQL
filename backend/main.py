@@ -23,13 +23,21 @@ def interpret(body: Annotated[dict, Body()]):
         'database': '',
         'output': [],
         'result': [],
+        'block': 0,
+        'symbols': [],
     }
     try:
-        stmts = xsql.parser.parse(body['input'])
+        xsql.lexer.errors = []
+        xsql.parser.errors = []
+        xsql.lexer.input(body['input'])
+        stmts = xsql.parser.parse()
+        if len(xsql.lexer.errors) > 0 or len(xsql.parser.errors) > 0:
+            raise exceptions.ParsingError('Errores en parseo. Cancelando ejecución.', 0)
         try:
-            globalContext = Context()
+            globalContext = Context(prev=None,name='Global')
             for stmt in stmts:
                 stmt.interpret(globalContext, parserState)
+            parserState['symbols'].extend(globalContext.dump())
         except exceptions.RuntimeError as error:
             parserState['output'].append(str(error))
     except exceptions.ParsingError as error:
@@ -37,6 +45,35 @@ def interpret(body: Annotated[dict, Body()]):
     return {
         'output': parserState['output'],
         'result': parserState['result'],
+        'errors': [*xsql.lexer.errors, *xsql.parser.errors],
+        'symbols': parserState['symbols'],
+    }
+
+@app.post('/GenerarAST')
+def GenerarAST(body: Annotated[dict, Body()]):
+    MAnejoAST = {
+        'output': [],
+        'result': [],
+    }
+    try:
+        stmts = xsql.parser.parse(body['input'])
+        try:
+            dot = 'graph AST {\n'
+            dot += 'ordering = out\n'
+            dot += stmts[0].GenerarAST()
+            dot += '"stmt0"[label = "stmt"]\n'
+            dot += f'"stmt0" -- "instruc{stmts[0].contador}"\n'
+
+            dot += '}'
+            print (dot)
+            MAnejoAST['result'].append(str(dot))
+        except exceptions.RuntimeError as error:
+            MAnejoAST['output'].append(str(error))
+    except exceptions.ParsingError as error:
+        MAnejoAST['output'].append(str(error))
+    return {
+        'output': MAnejoAST['output'],
+        'result': MAnejoAST['result'],
     }
 
 if __name__ == '__main__':

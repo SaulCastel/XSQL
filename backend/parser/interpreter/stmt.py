@@ -1,7 +1,12 @@
+<<<<<<< HEAD
 
 from parser.interpreter.database import ddl,dml,ciclo, ssl
 from parser.interpreter import expr, operations, exceptions
 from parser.interpreter import symbol
+=======
+from parser.interpreter.database import ddl,dml
+from parser.interpreter import expr, operations, exceptions
+>>>>>>> dcd25b501d95d92312815ba9a457c5f2ed39144f
 from parser.interpreter.context import Context
 from abc import ABC, abstractmethod
 
@@ -70,23 +75,34 @@ class CreateTable(Stmt):
         database = parserState['database']
         ddl.createTable(self.NameTable, self.column, database)
 
-class AlterADD(Stmt):
-    def __init__(self,NameTable,column) -> None:
-       self.column=column
-       self.NameTable =NameTable
+class DropTable(Stmt):
+    def __init__(self, tableName:str, position:tuple) -> None:
+        self.tableName = tableName
+        self.position = position
 
     def interpret(self, context: Context, parserState: dict):
         database = parserState['database']
-        ddl.alterAdd(self.NameTable, self.column, database)
+        ddl.dropTable(database, self.tableName, self.position)
+
+class AlterADD(Stmt):
+    def __init__(self,NameTable,column, position) -> None:
+        self.column=column
+        self.NameTable =NameTable
+        self.position = position
+
+    def interpret(self, context: Context, parserState: dict):
+        database = parserState['database']
+        ddl.alterAdd(self.NameTable, self.column, database, self.position)
 
 class AlterDROP(Stmt):
-    def __init__(self,NameTable,TextColumn) -> None:
-       self.TextColumn=TextColumn
-       self.NameTable =NameTable
+    def __init__(self,NameTable,TextColumn, position) -> None:
+        self.TextColumn=TextColumn
+        self.NameTable =NameTable
+        self.position = position
 
     def interpret(self, context: Context, parserState: dict):
         database = parserState['database']
-        ddl.alterDrop(self.NameTable, self.TextColumn, database)
+        ddl.alterDrop(self.NameTable, self.TextColumn, database, self.position)
 
 class Insert(Stmt):
     def __init__(self, table, selection, values, position):
@@ -107,11 +123,13 @@ class Usar(Stmt):
         parserState['database'] = self.uso
 
 class Truncate(Stmt):
-    def __init__(self,identifier) -> None:
+    def __init__(self,identifier, position) -> None:
         self.identifier=identifier
+        self.position = position
+
     def interpret(self, context: Context, parserState: dict):
         database = parserState['database']
-        ddl.truncate(self.identifier,database)
+        ddl.truncate(self.identifier,database, self.position)
 
 class Delete(Stmt):
     def __init__(self,identifier,condition,position)-> None:
@@ -131,26 +149,53 @@ class Update(Stmt):
         database=parserState['database']
         dml.update(context,database,self.identifier,self.condition,self.list)
 
+class Block(Stmt):
+    def __init__(self, stmts:list[Stmt]) -> None:
+        self.stmts = stmts
+
+    def interpret(self, context: Context, parserState: dict):
+        parserState['block'] += 1
+        context.name += f' Bloque {parserState["block"]}'
+        try:
+            for stmt in self.stmts:
+                stmt.interpret(context, parserState)
+        except exceptions.Return as ret:
+            parserState['symbols'].extend(context.dump())
+            return ret.value
+        parserState['symbols'].extend(context.dump())
+
 class Ciclo_while(Stmt):
-    def __init__(self,expresion,listStmt):
+    def __init__(self,expresion:expr.Expr,listStmt:Block):
         self.expresion=expresion
         self.listStmt=listStmt
+
     def interpret(self, context: Context, parserState: dict):
-        ciclo.ciclo_while(context,self.expresion,self.listStmt,parserState)
+        WhileContext = Context(context, 'While')
+        while self.expresion.interpret(context):
+            self.listStmt.interpret(WhileContext,parserState)
 
 class Ssl_IF(Stmt):
-    def __init__(self,expresion,listStmt):
+    def __init__(self,expresion:expr.Expr,trueBlock:Block,falseBlock:Block|None):
         self.expresion=expresion
-        self.listStmt=listStmt
+        self.trueBlock=trueBlock
+        self.falseBlock=falseBlock
+
     def interpret(self, context: Context, parserState: dict):
-        ciclo.ssl_If(context,self.expresion,self.listStmt,parserState)
+        if self.expresion.interpret(context):
+            IfContext = Context(context, 'If')
+            self.trueBlock.interpret(IfContext, parserState)
+        else:
+            if self.falseBlock:
+                ElseContext = Context(context, 'Else')
+                self.falseBlock.interpret(ElseContext, parserState)
 
 class Ssl_Case(Stmt):
-    def __init__(self,ListWhen,ElseOptions,FinCase):
+    def __init__(self, ListWhen:list[tuple[expr.Expr, Stmt]], ElseOptions:Stmt):
         self.ListWhen=ListWhen
         self.ElseOptions=ElseOptions
-        self.FinCase=FinCase
+
     def interpret(self, context: Context, parserState: dict):
+<<<<<<< HEAD
         ciclo.ssl_Case(context,self.ListWhen,self.ElseOptions,self.FinCase,parserState)
         
 class Create_procedure(Stmt):
@@ -189,3 +234,19 @@ class Exec_procedure(Stmt):
         
         for instruction in proc.block:
             instruction.interpret(proc_context,parserState)    
+=======
+        for Element in self.ListWhen:
+            if not Element[0].interpret(context):
+                continue
+            Element[1].interpret(context,parserState)     
+            break
+        else:
+            self.ElseOptions.interpret(context, parserState)
+
+class Return(Stmt):
+    def __init__(self, expr:expr.Expr) -> None:
+        self.expr = expr
+
+    def interpret(self, context: Context, parserState: dict):
+        raise exceptions.Return(self.expr.interpret(context))
+>>>>>>> dcd25b501d95d92312815ba9a457c5f2ed39144f
