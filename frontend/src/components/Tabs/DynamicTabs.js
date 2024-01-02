@@ -125,6 +125,12 @@ const DynamicTabs = forwardRef((props, ref) => {
     saveAs(blob, 'archivo.sql');
   };
 
+  // Mostrar-Ocultar editor
+  const handleToggleEditor = () => {
+    setShowEditor((prevShowEditor) => !prevShowEditor);
+    // generateErrorTable(); // Llama a la función al hacer clic en el botón
+  };
+
   // Errores
   const ErrorTable = ({ errors }) => {
     return (
@@ -286,6 +292,7 @@ const DynamicTabs = forwardRef((props, ref) => {
     addTab: addTab,
     handleExecuteQuery2: handleExecuteQuery2,
     handleSaveAsClick: handleSaveAsClick,
+    handleToggleEditor:handleToggleEditor,
   }));
 
   const handleExecuteQuery2 = () => {
@@ -315,12 +322,6 @@ const DynamicTabs = forwardRef((props, ref) => {
     <div className='col-10'>
       <div className='row'>
         <div className='py-4'>
-          {/* Botón para alternar la visibilidad del editor */}
-          <Button variant="primary" onClick={() => setShowEditor(!showEditor)}>
-            {showEditor ? "Ocultar Editor" : "Mostrar Editor"}
-          </Button>
-          <button onClick={generateErrorTable()}>Errores</button>
-
           <Tabs activeKey={key} onSelect={(k) => setKey(k)}>
             {tabs.map((tab) => (
               <Tab key={tab.key} eventKey={tab.key} title={(

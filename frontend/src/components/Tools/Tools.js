@@ -6,12 +6,14 @@ import Button from 'react-bootstrap/esm/Button';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import { setInput } from "../../services";
 
-function Tools({ onNewQuery, onExecuteQuery }) {
+function Tools({ onNewQuery, onExecuteQuery, handleToggleEditor }) {
     const handleExecuteQueryClick = () => {
         onExecuteQuery(); // Llama a la función proporcionada por App
     };
-
     
+    const handleClickToggleEditor = () => {
+        handleToggleEditor(); // Llama a la función proporcionada por App
+    };
 
     const fileInputRef = useRef(null);
 
@@ -51,9 +53,44 @@ function Tools({ onNewQuery, onExecuteQuery }) {
         if (fileName) {
             console.log('Eliminando:', fileName);
             const tabContent = {
-                "input": "USE "+ fileName + "; DELETE DATA BASE " + fileName + ';'
+                "input": "USE "+ fileName + "; DROP DATA BASE " + fileName + ';'
             };
             setDataInput(tabContent)
+        }
+    }
+
+    const handleButtonUse = () => {
+        const fileName = window.prompt('Ingrese nombre de Base de Datos:');
+        if (fileName) {
+            console.log('Usando:', fileName);
+            const tabContent = {
+                "input": "USE "+ fileName + ";"
+            };
+            setDataInput(tabContent)
+        }
+    }
+
+    const handleButtonDump = () => {
+        const fileName = window.prompt('Ingrese nombre de Base de Datos:');
+        if (fileName) {
+            console.log('Usando:', fileName);
+            const tabContent = {
+                "input": "USE "+ fileName + ";"
+            };
+            // setDataInput(tabContent)
+            alert("Estamos creando el DUMP de: "+ fileName)
+        }
+    }
+
+    const handleButtonExport = () => {
+        const fileName = window.prompt('Base de datos a exportar:');
+        if (fileName) {
+            console.log('Usando:', fileName);
+            const tabContent = {
+                "input": "USE "+ fileName + ";"
+            };
+            // setDataInput(tabContent)
+            alert("Estamos creando el EXPORT de: "+ fileName)
         }
     }
 
@@ -77,8 +114,8 @@ function Tools({ onNewQuery, onExecuteQuery }) {
                         <DropdownButton as={ButtonGroup} title="Base de datos" id="bg-nested-dropdown" variant="warning">
                             <Dropdown.Item eventKey="1" onClick={handleButtonNew}>Nueva base de datos</Dropdown.Item>
                             <Dropdown.Item eventKey="2" onClick={handleButtonDelete}>Eliminar base de datos</Dropdown.Item>
-                            <Dropdown.Item eventKey="3">Crear DUMP</Dropdown.Item>
-                            <Dropdown.Item eventKey="4">Seleccionar base de datos</Dropdown.Item>
+                            <Dropdown.Item eventKey="3" onClick={handleButtonDump}>Crear DUMP</Dropdown.Item>
+                            <Dropdown.Item eventKey="4" onClick={handleButtonUse}>Seleccionar base de datos</Dropdown.Item>
                         </DropdownButton>
                     </ButtonGroup>
                     <ButtonGroup className="me-2">
@@ -102,16 +139,15 @@ function Tools({ onNewQuery, onExecuteQuery }) {
                         </div>
                     </ButtonGroup>
                     <ButtonGroup className="me-2">
-                        <Button variant="warning">
+                        <Button variant="warning" onClick={handleButtonExport}>
                             EXPORTAR
                         </Button>
                     </ButtonGroup>
                     <ButtonGroup className="me-2">
-                        <DropdownButton as={ButtonGroup} title="REPORTES" id="bg-nested-dropdown" variant="success">
-                            <Dropdown.Item eventKey="1" >REPORTE DE ERRORES</Dropdown.Item>
-                            <Dropdown.Item eventKey="2" >TABLA DE SÍMBOLOS</Dropdown.Item>
-                            <Dropdown.Item eventKey="3" >AST</Dropdown.Item>
-                        </DropdownButton>
+                        <Button variant="success" onClick={handleClickToggleEditor}>
+                            REPORTES
+                        </Button>
+                        
                     </ButtonGroup>
                 </ButtonToolbar>
             </div>

@@ -17,9 +17,13 @@ function App() {
   const handleExecuteQuery = () => {
     dynamicTabsRef.current.handleExecuteQuery2();
   };
-  
+
   const handleSaveAsClick = () => {
     dynamicTabsRef.current.handleSaveAsClick();
+  };
+
+  const handleToggleEditor = () => {
+    dynamicTabsRef.current.handleToggleEditor();
   };
 
   const dataQuery = (data) => {
@@ -32,7 +36,7 @@ function App() {
   return (
     <div className="-" >
       <header className="App-header">
-        <Navbar onNewQuery={handleNewQuery} onDataQuery={dataQuery}  onExecuteQuery={handleExecuteQuery} handleSaveAsClick={handleSaveAsClick}/>
+        <Navbar onNewQuery={handleNewQuery} onDataQuery={dataQuery} onExecuteQuery={handleExecuteQuery} handleSaveAsClick={handleSaveAsClick} handleToggleEditor={handleToggleEditor} />
       </header>
       <body >
         <div className='container-fluid'>
