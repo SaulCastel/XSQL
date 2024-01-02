@@ -4,7 +4,7 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/esm/Button';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
-import { setInput } from "../../services";
+import { setInput, getExport, getDump } from "../../services";
 
 function Tools({ onNewQuery, onExecuteQuery, handleToggleEditor }) {
     const handleExecuteQueryClick = () => {
@@ -75,9 +75,9 @@ function Tools({ onNewQuery, onExecuteQuery, handleToggleEditor }) {
         if (fileName) {
             console.log('Usando:', fileName);
             const tabContent = {
-                "input": "USE "+ fileName + ";"
+                "input": fileName
             };
-            // setDataInput(tabContent)
+            // getDataDump(tabContent)
             alert("Estamos creando el DUMP de: "+ fileName)
         }
     }
@@ -89,7 +89,7 @@ function Tools({ onNewQuery, onExecuteQuery, handleToggleEditor }) {
             const tabContent = {
                 "input": "USE "+ fileName + ";"
             };
-            // setDataInput(tabContent)
+            // getDataExport(tabContent)
             alert("Estamos creando el EXPORT de: "+ fileName)
         }
     }
@@ -100,6 +100,30 @@ function Tools({ onNewQuery, onExecuteQuery, handleToggleEditor }) {
             if (res.status === 200) {
                 //Enviando result para generar tabla:
                 alert("Cambios realizados")
+            }
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    const getDataExport = async (tabContent) => {
+        try {
+            const res = await getExport(tabContent);
+            if (res.status === 200) {
+                //Enviando result para generar tabla:
+                alert("Export generado")
+            }
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    const getDataDump = async (tabContent) => {
+        try {
+            const res = await getDump(tabContent);
+            if (res.status === 200) {
+                //Enviando result para generar tabla:
+                alert("Dump generado")
             }
         } catch (err) {
             throw err;

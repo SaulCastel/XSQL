@@ -4,6 +4,7 @@ import { Editor } from "@monaco-editor/react";
 import Graph from "react-graph-vis";
 import { setInput } from "../../services";
 import { saveAs } from 'file-saver'
+import { data } from "vis-network";
 
 // Función para generar las líneas y filas de la tabla
 const generateTableLine = (columnSizes, position) => {
@@ -57,7 +58,7 @@ const generateFormattedTables = (resultData) => {
 const DynamicTabs = forwardRef((props, ref) => {
   const [key, setKey] = useState("query1");
   const [tabs, setTabs] = useState([
-    { key: "query1", title: "Query 1", content: '', output: '', editorContent: props.sqlContent[key] || '' },
+    { key: "query1", title: "Query 1", content: '', output: '', editorContent: props.sqlContent[key] || '', errorTable: '', symbolTable: '', astTree: '' },
   ]);
   const [showEditor, setShowEditor] = useState(true);
 
@@ -128,11 +129,16 @@ const DynamicTabs = forwardRef((props, ref) => {
   // Mostrar-Ocultar editor
   const handleToggleEditor = () => {
     setShowEditor((prevShowEditor) => !prevShowEditor);
-    // generateErrorTable(); // Llama a la función al hacer clic en el botón
+    ErrorTable()
   };
 
   // Errores
-  const ErrorTable = ({ errors }) => {
+  const ErrorTable = () => {
+    const currentTab = tabs.find((tab) => tab.key === key);
+    const errors = currentTab.errorTable
+    if (!Array.isArray(errors)) {
+      return <p>No hay errores para mostrar.</p>;
+    }
     return (
       <table className="table table-dark table-striped">
         <thead>
@@ -161,100 +167,39 @@ const DynamicTabs = forwardRef((props, ref) => {
     );
   };
 
-  const generateErrorTable = () => {
-    const errors = [
-      [
-        {
-          type: "lexico",
-          error: "#",
-          line: 1,
-          col: 0
-        },
-        {
-          type: "sintactico",
-          error: "end",
-          line: 1,
-          col: 183
-        },
-        {
-          type: "sintactico",
-          error: "(",
-          line: 47,
-          col: 83
-        },
-        {
-          type: "lexico",
-          error: "cointar",
-          line: 51,
-          col: 13
-        },
-      ],
-    ];
-
-    return <ErrorTable errors={errors} />;
-  };
-
   // Tabla de simbolos
-  const SymbolTable = ({ symbols }) => {
+  const SymbolTable = () => {
+    const currentTab = tabs.find((tab) => tab.key === key);
+    const symbols = currentTab.symbolTable
+    if (!Array.isArray(symbols)) {
+      return <p>No hay símbolos para mostrar.</p>;
+    }
     return (
       <table className="table table-success table-striped">
         <thead>
           <tr>
             <th scope="col">#</th>
             <th scope="col">Tipo</th>
-            <th scope="col">Descripción</th>
-            <th scope="col">Línea</th>
-            <th scope="col">Columna</th>
+            <th scope="col">Tamaño</th>
+            <th scope="col">Valor</th>
+            <th scope="col">Ámbito</th>
           </tr>
         </thead>
         <tbody>
-          {symbols.map((errorGroup, index) => (
-            errorGroup.map((error, subIndex) => (
+          {symbols.map((symbolGroup, index) => (
+            symbolGroup.map((symbol, subIndex) => (
               <tr key={`${index}-${subIndex}`}>
-                <th scope="row">{index * errorGroup.length + subIndex + 1}</th>
-                <td>{error.type}</td>
-                <td>{error.error}</td>
-                <td>{error.line}</td>
-                <td>{error.col}</td>
+                <th scope="row">{index * symbolGroup.length + subIndex + 1}</th>
+                <td>{symbol.id}</td>
+                <td>{symbol.type}</td>
+                <td>{symbol.length}</td>
+                <td>{symbol.where}</td>
               </tr>
             ))
           ))}
         </tbody>
       </table>
     );
-  };
-
-  const generateSymbolTable = () => {
-    const symbols = [
-      [
-        {
-          type: "lexico",
-          error: "#",
-          line: 1,
-          col: 0
-        },
-        {
-          type: "sintactico",
-          error: "end",
-          line: 1,
-          col: 183
-        },
-        {
-          type: "sintactico",
-          error: "(",
-          line: 47,
-          col: 83
-        },
-        {
-          type: "lexico",
-          error: "cointar",
-          line: 51,
-          col: 13
-        },
-      ],
-    ];
-
-    return <SymbolTable symbols={symbols} />;
   };
 
   const handleEditorChange = (tabKey, value) => {
@@ -266,11 +211,27 @@ const DynamicTabs = forwardRef((props, ref) => {
   };
 
   const handleOutput = (salida) => {
-    const { output: outputData, result: resultData } = salida;
+    const { output: outputData, result: resultData, errors: errorsData, symbols: symbolsData, ast: astData } = salida;
     const formattedTables = generateFormattedTables(resultData);
-
+    const dataError = errorsData.map(errorObj => ([
+      {
+        type: errorObj.type,
+        error: errorObj.error,
+        line: errorObj.line,
+        col: errorObj.col,
+      }
+    ]));
+    const dataSymbol = symbolsData.map(symbolObj => ([
+      {
+        id: symbolObj.id,
+        type: symbolObj.type,
+        length: symbolObj.length,
+        where: symbolObj.where,
+      }
+    ]));
+    
     const updatedTabs = tabs.map((tab) =>
-      tab.key === key ? { ...tab, content: formattedTables, output: outputData.join('\n') } : tab
+      tab.key === key ? { ...tab, content: formattedTables, output: outputData.join('\n'), errorTable: dataError, symbolTable: dataSymbol, astTree: astData.join('\n') } : tab
     );
     setTabs(updatedTabs);
   };
@@ -303,7 +264,7 @@ const DynamicTabs = forwardRef((props, ref) => {
         "input": currentTab.editorContent
       };
       setDataInput(tabContent)
-    };
+      };
   }
 
   const setDataInput = async (tabContent) => {
@@ -311,6 +272,7 @@ const DynamicTabs = forwardRef((props, ref) => {
       const res = await setInput(tabContent);
       if (res.status === 200) {
         //Enviando result para generar tabla:
+        console.log("data",res.data)
         handleOutput(res.data)
       }
     } catch (err) {
@@ -389,11 +351,11 @@ const DynamicTabs = forwardRef((props, ref) => {
                 <div className="container-fluid">
                   <div>
                     <h1>REPORTE DE ERRORES</h1>
-                    {generateErrorTable()}
+                    {ErrorTable()}
                   </div>
                   <div>
                     <h1>TABLA DE SÍMBOLOS</h1>
-                    {generateSymbolTable()}
+                    {SymbolTable(tab.symbolTable)}
                   </div>
                   <div>
                     <h1>AST</h1>

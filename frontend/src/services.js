@@ -21,3 +21,30 @@ export const setInput = async(data) => {
         throw err;
     }
 }
+
+// Solicitar EXPORT
+export const getExport = async(data) => {
+    try{
+        return await axios.get(apiURL+'export', data)
+    }catch(err){
+        throw err;
+    }
+}
+
+// Solicitar DUMP
+export const getDump = async(data) => {
+    try{
+        return await axios.get(apiURL+'dump', data)
+    }catch(err){
+        throw err;
+    }
+}
+
+// Solicitar BASES
+export const getBases = async(data) => {
+    try{
+        return await axios.get(apiURL+'bases', data)
+    }catch(err){
+        throw err;
+    }
+}
