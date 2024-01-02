@@ -329,6 +329,12 @@ class Ssl_Case(Stmt):
             dot += Element[1].GenerarAST()
             dot += f'"then{self.contador}_{numero}" -- "stmt{Element[1].contador}" \n'
             numero+=1
+        dot += f'"else{self.contador}" [label="ELSE"]\n'
+        dot += f'"{self.contador}" -- "else{self.contador}" \n'
+        dot += f'"then{self.contador}" [label="THEN"]\n'
+        dot += f'"else{self.contador}" -- "then{self.contador}" \n'
+        dot += self.ElseOptions.GenerarAST()
+        dot += f'"then{self.contador}" -- "stmt{self.ElseOptions.contador}" \n'
         return dot
 
 class Return(Stmt):
