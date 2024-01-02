@@ -294,11 +294,11 @@ class If(Expr):
         return self.falseExpr.interpret(context)
 
 class Case(Expr):
-    def __init__(self, cases:list[tuple[Expr, Expr]], default:Expr, alias:str) -> None:
+    def __init__(self, cases:list[tuple[Expr, Expr]], default:Expr, alias:str,contador:int) -> None:
         self.cases = cases
         self.default = default
         self.alias = alias
-
+        self.contador= contador
     def __str__(self) -> str:
         return self.alias
 
@@ -308,6 +308,12 @@ class Case(Expr):
                 continue
             return case[1].interpret(context)
         return self.default.interpret(context)
+    
+    def GenerarAST(self):
+        dot = f'"stmt{self.contador}" [label="stmt"]\n'
+        dot += f'"{self.contador}" [label="CASE"]\n'
+        dot += f'"stmt{self.contador}" -- "{self.contador}" \n'
+        return dot
 
     
         
