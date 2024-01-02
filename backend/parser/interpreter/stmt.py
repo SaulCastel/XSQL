@@ -214,17 +214,21 @@ class Delete(Stmt):
         return dot 
 
 class Update(Stmt):
-    def __init__(self,identifier,list,condition):
+    def __init__(self,identifier,list,condition,contador):
         self.identifier=identifier
         self.list=list
         self.condition= condition
+        self.contador = contador
     def interpret(self, context: Context, parserState: dict):
         database=parserState['database']
         dml.update(context,database,self.identifier,self.condition,self.list)
-
+    def GenerarAST(self):
+        dot = ast.update(self.identifier,self.condition,self.list,self.contador)
+        return dot
 class Block(Stmt):
-    def __init__(self, stmts:list[Stmt]) -> None:
+    def __init__(self, stmts:list[Stmt],contador:int) -> None:
         self.stmts = stmts
+        self.contador = contador
 
     def interpret(self, context: Context, parserState: dict):
         parserState['block'] += 1
@@ -236,22 +240,42 @@ class Block(Stmt):
             parserState['symbols'].extend(context.dump())
             return ret.value
         parserState['symbols'].extend(context.dump())
+    def GenerarAST(self):
+        dot = f'"{self.contador}" [label="Stmts"]\n'
+        
+        ins = self.stmts
+        for a in range(len(ins)):
+            dot += f'"{self.contador}" -- "stmt{ins[a].contador}"\n'
+            
+            dot += ins[a].GenerarAST()
+        return dot
 
 class Ciclo_while(Stmt):
-    def __init__(self,expresion:expr.Expr,listStmt:Block):
+    def __init__(self,expresion:expr.Expr,listStmt:Block,contador:int):
         self.expresion=expresion
         self.listStmt=listStmt
-
+        self.contador = contador
     def interpret(self, context: Context, parserState: dict):
         WhileContext = Context(context, 'While')
         while self.expresion.interpret(context):
             self.listStmt.interpret(WhileContext,parserState)
+    def GenerarAST(self):
+        dot = f'"stmt{self.contador}" [label="stmt"]\n'
+        dot += f'"{self.contador}" [label="WHILE"]\n'
+        dot += f'"stmt{self.contador}" -- "{self.contador}" \n'
+        dot += self.expresion.GenerarAST()
+        dot += f'"{self.contador}" -- "{self.expresion.contador}" \n'
+        dot += self.listStmt.GenerarAST()
+        dot += f'"{self.contador}" -- "{self.listStmt.contador}" \n'
+        
+        return dot
 
 class Ssl_IF(Stmt):
-    def __init__(self,expresion:expr.Expr,trueBlock:Block,falseBlock:Block|None):
+    def __init__(self,expresion:expr.Expr,trueBlock:Block,falseBlock:Block|None,contador:int):
         self.expresion=expresion
         self.trueBlock=trueBlock
         self.falseBlock=falseBlock
+        self.contador = contador
 
     def interpret(self, context: Context, parserState: dict):
         if self.expresion.interpret(context):
@@ -261,11 +285,26 @@ class Ssl_IF(Stmt):
             if self.falseBlock:
                 ElseContext = Context(context, 'Else')
                 self.falseBlock.interpret(ElseContext, parserState)
+    def GenerarAST(self):
+        dot = f'"stmt{self.contador}" [label="stmt"]\n'
+        dot += f'"{self.contador}" [label="IF"]\n'
+        dot += f'"stmt{self.contador}" -- "{self.contador}" \n'
+        dot += self.expresion.GenerarAST()
+        dot += f'"{self.contador}" -- "{self.expresion.contador}" \n'
+        dot += self.trueBlock.GenerarAST()
+        dot += f'"{self.contador}" -- "{self.trueBlock.contador}" \n'
+        if self.falseBlock:
+            dot += f'"else{self.contador}" [label="ELSE"]\n'
+            dot += f'"{self.contador}" -- "else{self.contador}" \n'
+            dot += self.falseBlock.GenerarAST()
+            dot += f'"else{self.contador}" -- "{self.falseBlock.contador}" \n'    
+        return dot
 
 class Ssl_Case(Stmt):
-    def __init__(self, ListWhen:list[tuple[expr.Expr, Stmt]], ElseOptions:Stmt):
+    def __init__(self, ListWhen:list[tuple[expr.Expr, Stmt]], ElseOptions:Stmt,contador:int):
         self.ListWhen=ListWhen
         self.ElseOptions=ElseOptions
+        self.contador=contador
 
     def interpret(self, context: Context, parserState: dict):
         for Element in self.ListWhen:
@@ -275,6 +314,22 @@ class Ssl_Case(Stmt):
             break
         else:
             self.ElseOptions.interpret(context, parserState)
+    def GenerarAST(self):
+        dot = f'"stmt{self.contador}" [label="stmt"]\n'
+        dot += f'"{self.contador}" [label="CASE"]\n'
+        dot += f'"stmt{self.contador}" -- "{self.contador}" \n'
+        numero=0
+        for Element in self.ListWhen:
+            dot += f'"when{self.contador}_{numero}" [label="WHEN"]\n'
+            dot += f'"{self.contador}" -- "when{self.contador}_{numero}" \n'
+            dot += Element[0].GenerarAST()
+            dot += f'"when{self.contador}_{numero}" -- "{Element[0].contador}" \n'
+            dot += f'"then{self.contador}_{numero}" [label="THEN"]\n'
+            dot += f'"when{self.contador}_{numero}" -- "then{self.contador}_{numero}" \n'
+            dot += Element[1].GenerarAST()
+            dot += f'"then{self.contador}_{numero}" -- "stmt{Element[1].contador}" \n'
+            numero+=1
+        return dot
 
 class Return(Stmt):
     def __init__(self, expr:expr.Expr) -> None:

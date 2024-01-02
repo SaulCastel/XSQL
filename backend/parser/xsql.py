@@ -46,7 +46,9 @@ def p_block(p):
     '''
     block   : BEGIN stmts END
     '''
-    p[0] = stmt.Block(p[2])
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] = stmt.Block(p[2],contadorGloblal)
 
 def p_return(p):
     '''
@@ -192,17 +194,19 @@ def p_Update(p):
     '''
     stmt :  UPDATE IDENTIFIER ListNewAssignment where
     '''
-    p[0]=stmt.Update(p[2],p[3],p[4])
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0]=stmt.Update(p[2],p[3],p[4],contadorGloblal)
 
 def p_List_NewAssignment(p):
     '''
-    ListNewAssignment   : ListNewAssignment ',' SET IDENTIFIER '=' expr
+    ListNewAssignment   : ListNewAssignment ',' IDENTIFIER '=' expr
                         | SET IDENTIFIER '=' expr
 
     '''
     if len(p) == 6:
         p[0] = p[1]
-        p[0].append((p[4], p[6]))
+        p[0].append((p[3], p[5]))
     else:
         p[0] = []
         p[0].append((p[2], p[4]))
@@ -332,7 +336,9 @@ def p_expr_case(p):
     '''
     expr_case   : CASE expr_cases ELSE THEN expr END case_alias
     '''
-    p[0] = expr.Case(p[2], p[5], p[7])
+    global contadorGloblal
+    contadorGloblal+=1
+    p[0] = expr.Case(p[2], p[5], p[7],contadorGloblal)
 
 def p_expr_cases(p):
     '''
@@ -573,13 +579,17 @@ def p_ciclo_While(p):
     '''
     stmt : WHILE expr block
     '''
-    p[0] = stmt.Ciclo_while(p[2],p[3])
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] = stmt.Ciclo_while(p[2],p[3],contadorGloblal)
 
 def p_ssl_If(p):
     '''
     stmt : IF expr block else
     '''
-    p[0] = stmt.Ssl_IF(p[2],p[3],p[4])
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] = stmt.Ssl_IF(p[2],p[3],p[4],contadorGloblal)
 
 def p_Fin_If(p):
     '''
@@ -593,7 +603,9 @@ def p_ssl_Case(p):
     '''
     stmt    : CASE stmt_cases ELSE THEN stmt ';' END
     '''
-    p[0] =stmt.Ssl_Case(p[2], p[5])
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] =stmt.Ssl_Case(p[2], p[5],contadorGloblal)
 
 def p_stmt_cases(p):
     '''

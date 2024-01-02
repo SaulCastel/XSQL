@@ -103,6 +103,33 @@ def delete(tableName:str,condition:expr.Binary|None, contador:int):
         dot += f'"where{contador}" -- "{condition.contador}"\n'
     return dot 
 
+def update(tableName:str,condition:expr.Binary|None, lista :list,contador:int):
+    dot = f'"stmt{contador}" [label="stmt"]\n'
+    dot += f'"{contador}" [label="UPDATE"]\n'
+    dot += f'"stmt{contador}" -- "{contador}" \n'
+    dot += f'"identificador{contador}" [label="{tableName}"]\n'
+    dot += f'"{contador}" -- "identificador{contador}"\n'
+    dot += f'"set{contador}" [label="SET"]\n'
+    dot += f'"{contador}" -- "set{contador}"\n'
+    element =0
+    for Asignacion in lista:
+        dot += f'"key{contador}_{element}" [label="{Asignacion[0]}"]\n'
+        dot += f'"set{contador}" -- "key{contador}_{element}"\n'
+        
+        dot += f'"igual{contador}_{element}" [label=" = "]\n'
+        dot += f'"set{contador}" -- "igual{contador}_{element}"\n'
+
+        dot += Asignacion[1].GenerarAST()
+        dot += f'"set{contador}" -- "{Asignacion[1].contador}"\n'
+        element+=1
+
+    if condition != None:
+        dot += f'"where{contador}" [label="WHERE"]\n'
+        dot += f'"{contador}" -- "where{contador}"\n'
+        dot += condition.GenerarAST()
+        dot += f'"where{contador}" -- "{condition.contador}"\n'
+    return dot 
+
 def selectFrom(
     tables:list[str],returnExprs:list[tuple[expr.Expr, str|None]],
     condition:expr.Binary|None,contador:int):
