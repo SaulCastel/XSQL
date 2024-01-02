@@ -32,7 +32,7 @@ const generateFormattedTables = (resultData) => {
       if (!table) return '';
 
       const headers = table.header;
-      const rows = table.records.map((record) => record.map((value) => value.trim()));
+      const rows = table.records.map((record) => record.map((value) => String(value).trim()));
 
       const columnSizes = headers.reduce((sizes, header, columnIndex) => {
         const maxContentLength = Math.max(
@@ -168,7 +168,6 @@ const DynamicTabs = forwardRef((props, ref) => {
     return finalString;
   };
 
-
   const handleEditorChange = (tabKey, value) => {
     setTabs((prevTabs) =>
       prevTabs.map((tab) =>
@@ -202,7 +201,6 @@ const DynamicTabs = forwardRef((props, ref) => {
       tab.key === key ? { ...tab, content: formattedTables, output: outputData.join('\n'), errorTable: dataError, symbolTable: dataSymbol, astTree: convertedString } : tab
     );
     setTabs(updatedTabs);
-
   };
 
   const addTab = () => {
@@ -323,14 +321,11 @@ const DynamicTabs = forwardRef((props, ref) => {
                   </div>
                   <div>
                     <h1>TABLA DE SÍMBOLOS</h1>
-                    {SymbolTable(tab.symbolTable)}
+                    {SymbolTable()}
                   </div>
                   <div>
                     <h1>AST</h1>
-                    {
-                      <Graphviz dot={
-                        tab.astTree
-                      } />}
+                    {<Graphviz dot={tab.astTree}/>}
                   </div>
                 </div>
               </Tab>
