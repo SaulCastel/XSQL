@@ -1,5 +1,5 @@
 from parser.interpreter.database import ddl,dml
-from parser.interpreter import expr, operations, exceptions
+from parser.interpreter import expr, operations, exceptions, symbol
 from parser.interpreter.context import Context
 from abc import ABC, abstractmethod
 
@@ -195,6 +195,52 @@ class Ssl_Case(Stmt):
             break
         else:
             self.ElseOptions.interpret(context, parserState)
+
+class CreateProc(Stmt):
+    def __init__(self, key:str, params:list, stmts:Block) -> None:
+        self.key = key
+        self.params = params
+        self.stmts = stmts
+
+    def interpret(self, context: Context, parserState: dict):
+        newProc = symbol.Proc(self.key, self.params, self.stmts)
+        context.declare(f'p_{self.key}', newProc)
+
+class ExecProc(Stmt):
+    def __init__(self, key:str, args:list[expr.Expr], position:tuple) -> None:
+        self.key = key
+        self.args = args
+        self.position = position
+
+    def interpret(self, context: Context, parserState: dict):
+        proc:symbol.Callable = context.get(self.key, self.position)
+        paramsLength = len(proc.params)
+        argsLength = len(self.args)
+        if paramsLength != argsLength:
+            msg = f'Disparidad en argumentos para {self.key}, se esperaban {paramsLength}, se obtuvieron {argsLength}'
+            raise exceptions.RuntimeError(msg, self.position)
+        procContext = Context(context, f'{self.key}')
+        for i in range(len(self.args)):
+            key = proc.params[i][0]
+            argType = proc.params[i][1][0]
+            length = proc.params[i][1][1]
+            value = self.args[i].interpret(context)
+            if length:
+                length = int(length)
+            sym = operations.wrapInSymbol(key, value, argType, length)
+            procContext.declare(key, sym)
+        proc.block.interpret(procContext, parserState)
+
+class CreateFunc(Stmt):
+    def __init__(self, key:str, params:list, returnType:tuple, stmts:Block) -> None:
+        self.key = key
+        self.params = params
+        self.returnType = returnType
+        self.stmts = stmts
+
+    def interpret(self, context: Context, parserState: dict):
+        newFunc = symbol.Func(self.key, self.params, self.returnType, self.stmts)
+        context.declare(f'f_{self.key}', newFunc)
 
 class Return(Stmt):
     def __init__(self, expr:expr.Expr) -> None:

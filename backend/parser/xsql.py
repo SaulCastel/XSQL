@@ -378,6 +378,7 @@ def p_condition_base(p):
                     | native
                     | symbol
                     | varCall
+                    | call_func
     '''
     p[0] = p[1]
 
@@ -427,6 +428,7 @@ def p_expr_base(p):
             | native
             | symbol
             | varCall
+            | call_func
     '''
     p[0] = p[1]
 
@@ -548,93 +550,54 @@ def p_stmt_cases(p):
         p[0] = p[1]
         p[0].append((p[3], p[5]))
 
-def p_options(p):
-    '''
-    options   : expr
-              | stmt
-    '''
-    p[0]=p[1]
-
-def p_finCase(p):
-    '''
-    finCase : IDENTIFIER FROM IDENTIFIER
-            | empty
-    '''
-    p[0]= []
-    p[0].append((p[1],p[3]))
-
 # -- Procedimientos
 def p_create_procedure(p):
     '''
-    stmt    : CREATE PROCEDURE IDENTIFIER '(' parameters ')' AS BEGIN stmts END 
+    stmt    : CREATE PROCEDURE IDENTIFIER '(' parameters ')' AS block
     '''
-    p[0] = stmt.Create_procedure(p[3],p[5],p[9])
+    p[0] = stmt.CreateProc(p[3], p[5], p[8])
     
 def p_parameters(p):
     '''
-    parameters : parameters ',' '@' IDENTIFIER type
-                         | '@' IDENTIFIER type
+    parameters  : parameters ',' '@' IDENTIFIER param_type
+                | '@' IDENTIFIER param_type
     '''
     if len(p) == 6:
         p[0] = p[1]
-        p[0].append(['@'+p[4], p[5]])
+        p[0].append(('@'+p[4], p[5]))
     else:
         p[0] = []
-        p[0].append(['@'+p[2], p[3]])
+        p[0].append(('@'+p[2], p[3]))
+
+def p_parameter_type(p):
+    '''
+    param_type  : AS type
+                | type
+    '''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = p[2]
         
 # -- Llamada procedimientos
 def p_exec_procedure(p):
     '''
-    stmt    : EXEC IDENTIFIER call_params
+    stmt    : EXEC IDENTIFIER '(' exprs ')'
     '''
+    p[0] = stmt.ExecProc(p[2], p[4], getPosition(p, 1))
 
-def p_call_params(p):
-    '''
-    call_params     : call
-                    | declare_params
-    '''
-    
-def p_call(p):
-    '''
-    call    : call ',' expr
-            | expr  
-    '''
-    
-def p_declare_params(p):
-    '''
-    declare_params  : declare_params ',' '@' IDENTIFIER '=' expr
-                    | '@' IDENTIFIER '=' expr
-    '''
 # -- Functions
 def p_create_function(p):
     '''
-    stmt    : CREATE FUNCTION IDENTIFIER '(' parameters ')' RETURN type AS BEGIN block_stmts END
+    stmt    : CREATE FUNCTION IDENTIFIER '(' parameters ')' RETURN type AS block
     '''
-    p[0] = stmt.Create_function(p[3],p[5],p[8],p[11])
-    
-def p_block_stmts(p):
-    '''
-    block_stmts  : block_stmts stmts
-                 | stmts
-                 | RETURN expr
-    '''    
-    if len(p) == 4:
-        p[0] = p[1]
-        p[0].append(p[2])
-    else:
-        p[0] = []
-        p[0].append(p[1])
-    
-# def p_extend_stmt(p):
-#     '''
-#     extend_stmt  : IF, ELSE, DECLARE, SET, INSERT, RETURN, CASE
-#     '''    
-#     p[0] = p[1]
+    p[0] = stmt.CreateFunc(p[3], p[5], p[8], p[10])
     
 def p_call_function(p):
     '''
-    expr   : IDENTIFIER '(' expr ')'
+    call_func   : IDENTIFIER '(' exprs ')'
     '''
+    p[0] = expr.CallFunc(p[1], p[3], getPosition(p, 2))
 
 def p_error(p):
     if not p:

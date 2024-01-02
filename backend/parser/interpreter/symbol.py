@@ -106,15 +106,26 @@ class DateTime(Symbol):
         else:
             self.value = value
 
-class Proc:
-    def __init__(self,name:str,args:list,block:list) -> None:
-        self.name = name
-        self.args = args
-        self.block = block
-
-class Func:
-    def __init__(self,name:str,args:list,returnType:str,block:list) -> None:
-        self.name = name
-        self.args = args
+class Callable(Symbol):
+    def __init__(
+        self,
+        key:str,
+        params:list[tuple[str, str]],
+        returnType:tuple[str, str]|None,
+        block
+    ) -> None:
+        super().__init__(key, None)
+        self.params = params
         self.returnType = returnType
         self.block = block
+
+    def update(self, value: Any) -> None:
+        pass
+
+class Proc(Callable):
+    def __init__(self,key:str,params:list,block) -> None:
+        super().__init__(key, params, None, block)
+
+class Func(Callable):
+    def __init__(self,key:str,params:list,returnType:tuple,block) -> None:
+        super().__init__(key, params, returnType, block)

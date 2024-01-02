@@ -1,7 +1,7 @@
 from typing import Any 
 from typing_extensions import Self
 from parser.interpreter.exceptions import RuntimeError
-from parser.interpreter.symbol import Symbol
+from parser.interpreter.symbol import Symbol, Callable
 
 class Context:
     def __init__(self, prev:Self|None=None, name:str='') -> None:
@@ -23,7 +23,7 @@ class Context:
         symbol = self.get(key, position)
         symbol.update(value)
 
-    def get(self, key: str, position:tuple|None) -> Symbol:
+    def get(self, key: str, position:tuple|None) -> Symbol|Callable:
         '''
         Search for a symbol on current context
         and all previous ones
