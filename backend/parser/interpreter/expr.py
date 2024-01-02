@@ -310,9 +310,24 @@ class Case(Expr):
         return self.default.interpret(context)
     
     def GenerarAST(self):
-        dot = f'"stmt{self.contador}" [label="stmt"]\n'
-        dot += f'"{self.contador}" [label="CASE"]\n'
-        dot += f'"stmt{self.contador}" -- "{self.contador}" \n'
+        dot = f'"{self.contador}" [label="CASE"]\n'
+        numero=0
+        for Element in self.cases:
+            dot += f'"when{self.contador}_{numero}" [label="WHEN"]\n'
+            dot += f'"{self.contador}" -- "when{self.contador}_{numero}" \n'
+            dot += Element[0].GenerarAST()
+            dot += f'"when{self.contador}_{numero}" -- "{Element[0].contador}" \n'
+            dot += f'"then{self.contador}_{numero}" [label="THEN"]\n'
+            dot += f'"when{self.contador}_{numero}" -- "then{self.contador}_{numero}" \n'
+            dot += Element[1].GenerarAST()
+            dot += f'"then{self.contador}_{numero}" -- "{Element[1].contador}" \n'
+            numero+=1
+        dot += f'"else{self.contador}" [label="ELSE"]\n'
+        dot += f'"{self.contador}" -- "else{self.contador}" \n'
+        dot += f'"then{self.contador}" [label="THEN"]\n'
+        dot += f'"else{self.contador}" -- "then{self.contador}" \n'
+        dot += self.default.GenerarAST()
+        dot += f'"then{self.contador}" -- "{self.default.contador}" \n'
         return dot
 
     
