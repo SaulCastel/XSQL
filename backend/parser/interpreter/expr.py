@@ -1,5 +1,6 @@
 from typing import Any
 from parser.interpreter.context import Context
+from parser.interpreter import symbol
 from . import operations
 from parser.interpreter import exceptions
 from abc import ABC, abstractmethod
@@ -330,5 +331,30 @@ class Case(Expr):
         dot += f'"then{self.contador}" -- "{self.default.contador}" \n'
         return dot
 
-    
-        
+class CallFunc(Expr):
+    def __init__(self, key:str, args:list, position:tuple) -> None:
+        self.key = key
+        self.args = args
+        self.position = position
+
+    def __str__(self) -> str:
+        return operations.printSignature(self.key, self.args)
+
+    def interpret(self, context: Context) -> Any:
+        func:symbol.Callable = context.get(self.key, self.position)
+        paramsLength = len(func.params)
+        argsLength = len(self.args)
+        if paramsLength != argsLength:
+            msg = f'Disparidad en argumentos para {self.key}, se esperaban {paramsLength}, se obtuvieron {argsLength}'
+            raise exceptions.RuntimeError(msg, self.position)
+        funcContext = Context(context, f'{self.key}')
+        for i in range(len(self.args)):
+            key = func.params[i][0]
+            argType = func.params[i][1][0]
+            length = func.params[i][1][1]
+            value = self.args[i].interpret(context)
+            if length:
+                length = int(length)
+            sym = operations.wrapInSymbol(key, value, argType, length)
+            funcContext.declare(key, sym)
+        return func.block.interpret(funcContext)
