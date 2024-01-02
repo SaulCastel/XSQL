@@ -6,11 +6,15 @@ import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import Tools from "../Tools/Tools";
 
-const NavBarSql = ({ onNewQuery, onDataQuery, onExecuteQuery }) => {
+const NavBarSql = ({ onNewQuery, onDataQuery, onExecuteQuery, handleSaveAsClick }) => {
     const [showTools, setShowTools] = useState(false);
 
     const handleToolsClick = () => {
         setShowTools(!showTools);
+    };
+
+    const handleSaveQueryClick = () => {
+        handleSaveAsClick(); // Llama a la función proporcionada por App
     };
 
     const handleFileChange = (event) => {
@@ -49,7 +53,9 @@ const NavBarSql = ({ onNewQuery, onDataQuery, onExecuteQuery }) => {
                                     />
                                 </label>
                                 <NavDropdown.Item href="#action/3.3">Guardar</NavDropdown.Item>
-                                <NavDropdown.Item href="#action/3.3">Guardar como...</NavDropdown.Item>
+                                <NavDropdown.Item href="#action/3.3" onClick={handleSaveQueryClick}>
+                                    Guardar como...
+                                </NavDropdown.Item>
                                 <NavDropdown.Item href="#action/3.3">Cerrar</NavDropdown.Item>
                                 <NavDropdown.Divider />
                                 <NavDropdown.Item href="#action/3.4">Salir</NavDropdown.Item>

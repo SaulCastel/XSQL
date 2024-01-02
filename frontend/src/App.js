@@ -17,6 +17,10 @@ function App() {
   const handleExecuteQuery = () => {
     dynamicTabsRef.current.handleExecuteQuery2();
   };
+  
+  const handleSaveAsClick = () => {
+    dynamicTabsRef.current.handleSaveAsClick();
+  };
 
   const dataQuery = (data) => {
     setSqlContent((prevContent) => {
@@ -28,7 +32,7 @@ function App() {
   return (
     <div className="-" >
       <header className="App-header">
-        <Navbar onNewQuery={handleNewQuery} onDataQuery={dataQuery}  onExecuteQuery={handleExecuteQuery}/>
+        <Navbar onNewQuery={handleNewQuery} onDataQuery={dataQuery}  onExecuteQuery={handleExecuteQuery} handleSaveAsClick={handleSaveAsClick}/>
       </header>
       <body >
         <div className='container-fluid'>

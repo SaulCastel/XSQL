@@ -3,6 +3,7 @@ import { Tab, Tabs, Button } from "react-bootstrap";
 import { Editor } from "@monaco-editor/react";
 import Graph from "react-graph-vis";
 import { setInput } from "../../services";
+import { saveAs } from 'file-saver'
 
 // Función para generar las líneas y filas de la tabla
 const generateTableLine = (columnSizes, position) => {
@@ -60,7 +61,6 @@ const DynamicTabs = forwardRef((props, ref) => {
   ]);
   const [showEditor, setShowEditor] = useState(true);
 
-
   // // Define el gráfico DOT como un string
   // const graph = {
   //   nodes: [
@@ -112,6 +112,19 @@ const DynamicTabs = forwardRef((props, ref) => {
   //   height: "500px"
   // };
 
+  // Guardar SQL
+  const handleSaveAsClick = () => {
+    const currentTab = tabs.find((tab) => tab.key === key);
+    if (currentTab) {
+      downloadSqlFile(currentTab.editorContent);
+    };
+  }
+
+  const downloadSqlFile = (content) => {
+    const blob = new Blob([content], { type: 'text/sql' });
+    saveAs(blob, 'archivo.sql');
+  };
+
   const handleEditorChange = (tabKey, value) => {
     setTabs((prevTabs) =>
       prevTabs.map((tab) =>
@@ -146,6 +159,7 @@ const DynamicTabs = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     addTab: addTab,
     handleExecuteQuery2: handleExecuteQuery2,
+    handleSaveAsClick: handleSaveAsClick,
   }));
 
   const handleExecuteQuery2 = () => {
@@ -193,18 +207,35 @@ const DynamicTabs = forwardRef((props, ref) => {
                 {showEditor && (
                   <div className='container-fluid'>
                     <div className='row '>
-                      <div className='col-6 py-1'>
+                      <div className='col-9 py-1'>
                         <h5>Editor</h5>
                         <Editor
                           width='100%'
-                          height='500px'
+                          height='350px'
                           language='sql'
                           theme='vs-dark'
                           value={tab.editorContent}
                           onChange={(value, event) => handleEditorChange(tab.key, value)}
                         />
                       </div>
-                      <div className='col-6 py-1'>
+
+                      <div className='col-3 py-1 '>
+                        <h5>Consola</h5>
+                        <Editor
+                          width='100%'
+                          height='350px'
+                          language='plaintext'
+                          theme='vs-dark'
+                          options={{
+                            readOnly: true,
+                            wordWrap: 'on',
+                            overflowX: 'auto',
+                          }}
+                          value={tab.output || ''}
+                        />
+                      </div>
+
+                      <div className='col-12'>
                         <h5>Salida</h5>
                         <Editor
                           id={`editor-${tab.key}`}
@@ -221,21 +252,6 @@ const DynamicTabs = forwardRef((props, ref) => {
                               enabled: false,
                             },
                           }}
-                        />
-                      </div>
-                      <div className='col-12 '>
-                        <h5>Consola</h5>
-                        <Editor
-                          width='100%'
-                          height='200px'
-                          language='plaintext'
-                          theme='vs-dark'
-                          options={{
-                            readOnly: true,
-                            wordWrap: 'on',
-                            overflowX: 'auto',
-                          }}
-                          value={tab.output || ''}
                         />
                       </div>
                     </div>
