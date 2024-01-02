@@ -54,7 +54,8 @@ def interpret(body: Annotated[dict, Body()]):
             dot += f'"MasStmt{a}"[label = "stmts"]\n'
             dot += f'"MasStmt{a}" -- "MasStmt{a-1}"\n'
         dot += '}'
-        print (dot)
+        with open('ast.dot', 'w') as file:
+            file.write(dot)
         parserState['ast'].append(str(dot))
     except exceptions.ParsingError as error:
         parserState['output'].append(str(error))

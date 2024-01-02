@@ -228,15 +228,18 @@ class Block(Stmt):
         self.contador = contador
 
     def interpret(self, context: Context, parserState: dict):
-        parserState['block'] += 1
-        context.name += f' Bloque {parserState["block"]}'
+        if parserState:
+            parserState['block'] += 1
+            context.name += f' Bloque {parserState["block"]}'
         try:
             for stmt in self.stmts:
                 stmt.interpret(context, parserState)
         except exceptions.Return as ret:
-            parserState['symbols'].extend(context.dump())
+            if parserState:
+                parserState['symbols'].extend(context.dump())
             return ret.value
-        parserState['symbols'].extend(context.dump())
+        if parserState:
+            parserState['symbols'].extend(context.dump())
     def GenerarAST(self):
         dot = f'"{self.contador}" [label="Stmts"]\n'
         
@@ -343,7 +346,7 @@ class CreateProc(Stmt):
 
     def interpret(self, context: Context, parserState: dict):
         newProc = symbol.Proc(self.key, self.params, self.stmts)
-        context.declare(f'p_{self.key}', newProc)
+        context.declare(f'{self.key}', newProc)
     def GenerarAST(self):
         dot = f'"stmt{self.contador}" [label="stmt"]\n'
         dot += f'"{self.contador}" [label="PROCEDURE"]\n'
@@ -396,7 +399,7 @@ class CreateFunc(Stmt):
 
     def interpret(self, context: Context, parserState: dict):
         newFunc = symbol.Func(self.key, self.params, self.returnType, self.stmts)
-        context.declare(f'f_{self.key}', newFunc)
+        context.declare(f'{self.key}', newFunc)
     def GenerarAST(self):
         dot = f'"stmt{self.contador}" [label="stmt"]\n'
         dot += f'"{self.contador}" [label="FUNCTION"]\n'
