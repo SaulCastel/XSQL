@@ -357,4 +357,7 @@ class CallFunc(Expr):
                 length = int(length)
             sym = operations.wrapInSymbol(key, value, argType, length)
             funcContext.declare(key, sym)
-        return func.block.interpret(funcContext, None)
+        try:
+            func.block.interpret(funcContext, None)
+        except exceptions.Return as ret:
+            return ret.value

@@ -231,15 +231,11 @@ class Block(Stmt):
         if parserState:
             parserState['block'] += 1
             context.name += f' Bloque {parserState["block"]}'
-        try:
-            for stmt in self.stmts:
-                stmt.interpret(context, parserState)
-        except exceptions.Return as ret:
-            if parserState:
-                parserState['symbols'].extend(context.dump())
-            return ret.value
+        for stmt in self.stmts:
+            stmt.interpret(context, parserState)
         if parserState:
             parserState['symbols'].extend(context.dump())
+
     def GenerarAST(self):
         dot = f'"{self.contador}" [label="Stmts"]\n'
         
