@@ -1,10 +1,9 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Tab, Tabs, Button } from "react-bootstrap";
 import { Editor } from "@monaco-editor/react";
-import Graph from "react-graph-vis";
 import { setInput } from "../../services";
 import { saveAs } from 'file-saver'
-import { data } from "vis-network";
+import { Graphviz } from 'graphviz-react'
 
 // Función para generar las líneas y filas de la tabla
 const generateTableLine = (columnSizes, position) => {
@@ -58,60 +57,9 @@ const generateFormattedTables = (resultData) => {
 const DynamicTabs = forwardRef((props, ref) => {
   const [key, setKey] = useState("query1");
   const [tabs, setTabs] = useState([
-    { key: "query1", title: "Query 1", content: '', output: '', editorContent: props.sqlContent[key] || '', errorTable: '', symbolTable: '', astTree: '' },
+    { key: "query1", title: "Query 1", content: '', output: '', editorContent: props.sqlContent[key] || '', errorTable: '', symbolTable: '', astTree: 'graph AST {}' },
   ]);
   const [showEditor, setShowEditor] = useState(true);
-
-  // // Define el gráfico DOT como un string
-  // const graph = {
-  //   nodes: [
-  //     { id: 1, label: "Node 1", title: "node 1 tooltip text" },
-  //     { id: 2, label: "Node 2", title: "node 2 tooltip text" },
-  //     { id: 3, label: "Node 3", title: "node 3 tooltip text" },
-  //     { id: 4, label: "Node 4", title: "node 4 tooltip text" },
-  //     { id: 5, label: "Node 5", title: "node 5 tooltip text" },
-  //     { id: 6, label: "Node 6", title: "node 6 tooltip text" },
-  //     { id: 7, label: "Node 7", title: "node 7 tooltip text" },
-  //     { id: 8, label: "Node 8", title: "node 8 tooltip text" },
-  //     { id: 9, label: "Node 9", title: "node 9 tooltip text" },
-  //     { id: 10, label: "Node 10", title: "node 10 tooltip text" },
-  //     { id: 11, label: "Node 11", title: "node 11 tooltip text" },
-  //     { id: 12, label: "Node 12", title: "node 12 tooltip text" },
-  //     { id: 13, label: "Node 13", title: "node 13 tooltip text" },
-  //     { id: 14, label: "Node 14", title: "node 14 tooltip text" },
-  //     { id: 15, label: "Node 15", title: "node 15 tooltip text" },
-  //     { id: 16, label: "Node 16", title: "node 16 tooltip text" },
-  //   ],
-  //   edges: [
-  //     { from: 1, to: 2 },
-  //     { from: 1, to: 3 },
-  //     { from: 2, to: 4 },
-  //     { from: 2, to: 5 },
-  //     { from: 3, to: 6 },
-  //     { from: 3, to: 7 },
-  //     { from: 4, to: 8 },
-  //     { from: 4, to: 9 },
-  //     { from: 5, to: 10 },
-  //     { from: 5, to: 11 },
-  //     { from: 6, to: 12 },
-  //     { from: 6, to: 13 },
-  //     { from: 7, to: 14 },
-  //     { from: 7, to: 15 },
-  //     { from: 8, to: 16 },
-  //   ],
-  // };
-
-
-  // const options = {
-  //   layout: {
-  //     hierarchical: true
-  //   },
-  //   edges: {
-  //     arrows: { to: { enabled: false } },
-  //     color: "#000000"
-  //   },
-  //   height: "500px"
-  // };
 
   // Guardar SQL
   const handleSaveAsClick = () => {
@@ -202,6 +150,20 @@ const DynamicTabs = forwardRef((props, ref) => {
     );
   };
 
+  const convertGraphString = (inputString) => {
+    // Eliminar saltos de línea y espacios innecesarios
+    const compactString = inputString.replace(/\n/g, '').replace(/\s+/g, ' ');
+
+    // Agregar espacios alrededor de los caracteres que actúan como delimitadores
+    const formattedString = compactString.replace(/(\[|\]|\{|}|;|\")/g, ' $1 ');
+
+    // Eliminar espacios duplicados
+    const finalString = formattedString.replace(/\s+/g, ' ').trim();
+
+    return finalString;
+  };
+
+
   const handleEditorChange = (tabKey, value) => {
     setTabs((prevTabs) =>
       prevTabs.map((tab) =>
@@ -229,11 +191,13 @@ const DynamicTabs = forwardRef((props, ref) => {
         where: symbolObj.where,
       }
     ]));
-    
+    const convertedString = astData && astData.length > 0 ? convertGraphString(astData[0]) : "graph AST {}";
+
     const updatedTabs = tabs.map((tab) =>
-      tab.key === key ? { ...tab, content: formattedTables, output: outputData.join('\n'), errorTable: dataError, symbolTable: dataSymbol, astTree: astData.join('\n') } : tab
+      tab.key === key ? { ...tab, content: formattedTables, output: outputData.join('\n'), errorTable: dataError, symbolTable: dataSymbol, astTree: convertedString } : tab
     );
     setTabs(updatedTabs);
+
   };
 
   const addTab = () => {
@@ -253,7 +217,7 @@ const DynamicTabs = forwardRef((props, ref) => {
     addTab: addTab,
     handleExecuteQuery2: handleExecuteQuery2,
     handleSaveAsClick: handleSaveAsClick,
-    handleToggleEditor:handleToggleEditor,
+    handleToggleEditor: handleToggleEditor,
   }));
 
   const handleExecuteQuery2 = () => {
@@ -264,7 +228,7 @@ const DynamicTabs = forwardRef((props, ref) => {
         "input": currentTab.editorContent
       };
       setDataInput(tabContent)
-      };
+    };
   }
 
   const setDataInput = async (tabContent) => {
@@ -272,7 +236,6 @@ const DynamicTabs = forwardRef((props, ref) => {
       const res = await setInput(tabContent);
       if (res.status === 200) {
         //Enviando result para generar tabla:
-        console.log("data",res.data)
         handleOutput(res.data)
       }
     } catch (err) {
@@ -359,10 +322,10 @@ const DynamicTabs = forwardRef((props, ref) => {
                   </div>
                   <div>
                     <h1>AST</h1>
-                    {/* <Graph
-                      graph={graph}
-                      options={options}
-                    /> */}
+                    {
+                      <Graphviz dot={
+                      tab.astTree
+                    } />}
                   </div>
                 </div>
               </Tab>

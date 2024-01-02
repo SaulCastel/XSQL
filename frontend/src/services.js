@@ -14,7 +14,6 @@ export const getOutput = async(data) => {
 
 //Enviar entrada
 export const setInput = async(data) => {
-    console.log(data)
     try{
         return await axios.post(apiURL+'interpret',data)
     }catch(err){
