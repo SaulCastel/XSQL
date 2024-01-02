@@ -54,7 +54,9 @@ def p_return(p):
     '''
     stmt    : RETURN expr
     '''
-    p[0] = stmt.Return(p[2])
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] = stmt.Return(p[2],contadorGloblal)
 
 def p_usar_F(p):
    '''
@@ -625,7 +627,9 @@ def p_create_procedure(p):
     '''
     stmt    : CREATE PROCEDURE IDENTIFIER '(' parameters ')' AS block
     '''
-    p[0] = stmt.CreateProc(p[3], p[5], p[8])
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] = stmt.CreateProc(p[3], p[5], p[8],contadorGloblal)
     
 def p_parameters(p):
     '''
@@ -654,20 +658,26 @@ def p_exec_procedure(p):
     '''
     stmt    : EXEC IDENTIFIER '(' exprs ')'
     '''
-    p[0] = stmt.ExecProc(p[2], p[4], getPosition(p, 1))
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] = stmt.ExecProc(p[2], p[4], getPosition(p, 1),contadorGloblal)
 
 # -- Functions
 def p_create_function(p):
     '''
     stmt    : CREATE FUNCTION IDENTIFIER '(' parameters ')' RETURN type AS block
     '''
-    p[0] = stmt.CreateFunc(p[3], p[5], p[8], p[10])
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] = stmt.CreateFunc(p[3], p[5], p[8], p[10],contadorGloblal)
     
 def p_call_function(p):
     '''
     call_func   : IDENTIFIER '(' exprs ')'
     '''
-    p[0] = expr.CallFunc(p[1], p[3], getPosition(p, 2))
+    global contadorGloblal 
+    contadorGloblal += 1
+    p[0] = expr.CallFunc(p[1], p[3], getPosition(p, 2),contadorGloblal)
 
 def p_error(p):
     if not p:

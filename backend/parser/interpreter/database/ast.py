@@ -138,8 +138,10 @@ def selectFrom(
     dot += f'"stmt{contador}" -- "{contador}" \n'
     if returnExprs !=None:
         for Expr in returnExprs:
-            dot += Expr[0].GenerarAST()
-            dot += f'"{contador}" -- "{Expr[0].contador}" \n'
+            print (Expr[0])
+            if Expr[0].GenerarAST() != None:
+                dot += Expr[0].GenerarAST()
+                dot += f'"{contador}" -- "{Expr[0].contador}" \n'
     dot += f'"from{contador}" [label="FROM"]\n'
     dot += f'"{contador}" -- "from{contador}" \n'
     Element=0

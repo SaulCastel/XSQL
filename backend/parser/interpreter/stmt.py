@@ -335,20 +335,32 @@ class Ssl_Case(Stmt):
         return dot
 
 class CreateProc(Stmt):
-    def __init__(self, key:str, params:list, stmts:Block) -> None:
+    def __init__(self, key:str, params:list, stmts:Block,contador) -> None:
         self.key = key
         self.params = params
         self.stmts = stmts
+        self.contador= contador
 
     def interpret(self, context: Context, parserState: dict):
         newProc = symbol.Proc(self.key, self.params, self.stmts)
         context.declare(f'p_{self.key}', newProc)
+    def GenerarAST(self):
+        dot = f'"stmt{self.contador}" [label="stmt"]\n'
+        dot += f'"{self.contador}" [label="PROCEDURE"]\n'
+        dot += f'"stmt{self.contador}" -- "{self.contador}" \n'
+        if self.stmts:
+            dot += f'"else{self.contador}" [label="ELSE"]\n'
+            dot += f'"{self.contador}" -- "else{self.contador}" \n'
+            dot += self.stmts.GenerarAST()
+            dot += f'"else{self.contador}" -- "{self.stmts.contador}" \n'    
+        return dot
 
 class ExecProc(Stmt):
-    def __init__(self, key:str, args:list[expr.Expr], position:tuple) -> None:
+    def __init__(self, key:str, args:list[expr.Expr], position:tuple,contador) -> None:
         self.key = key
         self.args = args
         self.position = position
+        self.contador= contador
 
     def interpret(self, context: Context, parserState: dict):
         proc:symbol.Callable = context.get(self.key, self.position)
@@ -368,21 +380,43 @@ class ExecProc(Stmt):
             sym = operations.wrapInSymbol(key, value, argType, length)
             procContext.declare(key, sym)
         proc.block.interpret(procContext, parserState)
+    def GenerarAST(self):
+        dot = f'"stmt{self.contador}" [label="stmt"]\n'
+        dot += f'"{self.contador}" [label="FUNCTION"]\n'
+        dot += f'"stmt{self.contador}" -- "{self.contador}" \n'
+        return dot
 
 class CreateFunc(Stmt):
-    def __init__(self, key:str, params:list, returnType:tuple, stmts:Block) -> None:
+    def __init__(self, key:str, params:list, returnType:tuple, stmts:Block,contador:int) -> None:
         self.key = key
         self.params = params
         self.returnType = returnType
         self.stmts = stmts
+        self.contador= contador
 
     def interpret(self, context: Context, parserState: dict):
         newFunc = symbol.Func(self.key, self.params, self.returnType, self.stmts)
         context.declare(f'f_{self.key}', newFunc)
+    def GenerarAST(self):
+        dot = f'"stmt{self.contador}" [label="stmt"]\n'
+        dot += f'"{self.contador}" [label="FUNCTION"]\n'
+        dot += f'"stmt{self.contador}" -- "{self.contador}" \n'
+        if self.stmts:
+            dot += f'"else{self.contador}" [label="ELSE"]\n'
+            dot += f'"{self.contador}" -- "else{self.contador}" \n'
+            dot += self.stmts.GenerarAST()
+            dot += f'"else{self.contador}" -- "{self.stmts.contador}" \n'    
+        return dot
 
 class Return(Stmt):
-    def __init__(self, expr:expr.Expr) -> None:
+    def __init__(self, expr:expr.Expr,contador) -> None:
         self.expr = expr
+        self.contador = contador
 
     def interpret(self, context: Context, parserState: dict):
         raise exceptions.Return(self.expr.interpret(context))
+    def GenerarAST(self):
+        dot = f'"stmt{self.contador}" [label="stmt"]\n'
+        dot += f'"{self.contador}" [label="RETURN"]\n'
+        dot += f'"stmt{self.contador}" -- "{self.contador}" \n'
+        return dot
